@@ -19,4 +19,8 @@ setup(name=PACKAGE,
       author='DomainTools',
       author_email='support@domaintools.com',
       url='http://www.domaintools.com/',
+      install_requires=['tldextract',
+        'python-dateutil',
+        'aiohttp',
+        'domaintools_api'],
       packages=[PACKAGE])
