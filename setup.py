@@ -3,10 +3,8 @@ import os
 import re
 from setuptools import setup
 
-NAMESPACE = 'domaintools'
-SUB_PACKAGE= 'misp'
-PACKAGE = '{}.{}'.format(NAMESPACE, SUB_PACKAGE)
-PACKAGE_PATH = os.path.join(os.path.dirname(__file__), NAMESPACE, SUB_PACKAGE)
+PACKAGE = 'domaintools_misp'
+PACKAGE_PATH = os.path.join(os.path.dirname(__file__), PACKAGE)
 
 with open(os.path.join(PACKAGE_PATH, '__init__.py')) as package_file:
     version_match = re.search(r'''^__version__\s*=\s*['"]([^'"]*)['"]''', package_file.read(), re.M)
@@ -17,10 +15,8 @@ with open(os.path.join(PACKAGE_PATH, '__init__.py')) as package_file:
 
 setup(name=PACKAGE,
       version=VERSION,
-      description='The DomainTools misp library',
+      description='The DomainTools MISP library',
       author='DomainTools',
       author_email='support@domaintools.com',
       url='http://www.domaintools.com/',
-      install_requires=['domaintools.logging'],
-      namespace_packages=[NAMESPACE],
       packages=[PACKAGE])
