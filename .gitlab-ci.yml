@@ -1,0 +1,8 @@
+stages:
+    - build
+
+jobtest:
+    stage: build
+    script:
+        - tox
+        - ci_submit

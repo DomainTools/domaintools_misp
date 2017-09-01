@@ -1,0 +1,61 @@
+# Compiled python scripts
+*.pyc
+*.pyo
+*.c
+__pycache__
+
+# Compressed files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+*.bz2
+
+# Logs and Databases
+*.log
+*.sqlite
+nohup.out
+screenlog.*
+
+# OS generated files
+.DS_Store*
+.AppleDouble
+.AppleDesktop
+.AppleDB
+
+# hidden and special
+.*
+~*
+*~
+
+# virtual env
+venv/
+
+
+# Testing generated files
+htmlcov
+
+# Packaging implementation files
+build
+dist
+*.egg-info
+
+# Python3 Virtual Environment
+bin/
+include/
+lib/
+lib64
+pyvenv.cfg
+venv/
+
+
+# Don't ignore specific dot files
+!.gitignore
+!.editorconfig
+!.coveragerc
+!.env
+!.gitlab-ci.yml

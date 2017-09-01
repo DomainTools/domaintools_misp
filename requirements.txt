@@ -1,0 +1,9 @@
+tldextract
+domaintools_api
+pytest==2.9.1
+pytest-cov==2.2.1
+pytest-benchmark==3.0.0
+tox==2.3.1
+isort==4.2.5
+ipython==4.1.2
+ipdb==0.9.0
