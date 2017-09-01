@@ -1,11 +1,11 @@
 from __future__ import absolute_import, unicode_literals, print_function, division
 import sys
 import logging
-from domaintools_misp.base import dt_misp_module_base
+from domaintools_misp import base
 
 logger = logging.getLogger(__name__)
 
-class dt_misp_module_historic(dt_misp_module_base):
+class dt_misp_module_historic(base.dt_misp_module_base):
     def __init__(self, debug = False):
         self.module_info = {
             'version': '1.8.9',
@@ -18,7 +18,7 @@ class dt_misp_module_historic(dt_misp_module_base):
             'name': 'DomainTools-Historic'
         }
         self.results_limit = 500
-        dt_misp_module_base.__init__(self)
+        base.dt_misp_module_base.__init__(self)
 
         if debug:
             self.log = logging.getLogger('DomainTools Historic')
