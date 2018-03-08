@@ -29,4 +29,15 @@ class dt_misp_module_pivot(base.dt_misp_module_base):
             self.log.addHandler(self.ch)
             self.debug = True
 
+    def handler(self, q=False):
+        if not q:
+            return q
+        return self.process_request(q)
+
+    def introspection(self):
+        return self.misp_attributes
+
+    def version(self):
+        self.module_info['config'] = self.module_config
+        return self.module_info
 

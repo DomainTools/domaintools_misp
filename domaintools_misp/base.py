@@ -4,22 +4,27 @@ import time
 import re
 import hashlib
 import logging
+import sys
 from dateutil import parser
 from domaintools import API
 from domaintools.exceptions import (BadRequestException, InternalServerErrorException, NotAuthorizedException,
                                     NotFoundException, ServiceException, ServiceUnavailableException)
 
-logger = logging.getLogger(__name__)
-
 class dt_module_helpers():
     def __init__(self, plugin):
         self.plugin = plugin
-        
+
     def append_unique_payload(self, payload):
         m = hashlib.md5()
         for k in payload['values']:
             if k == '':
                 continue
+
+            if payload['values'][k] == '':
+                if len(payload['values']) == 1:
+                    return
+                continue
+
             m.update('{0}'.format(k).encode('utf-8'))
             m.update('{0}'.format(payload['values'][k]).encode('utf-8'))
 
@@ -190,6 +195,13 @@ class dt_misp_module_base:
         self.unique = dict()
         self.errors = {'error': 'An unknown error has occurred'}
         self.helper = dt_module_helpers(self)
+        self.log = logging.getLogger('DomainTools')
+        self.log.setLevel(logging.DEBUG)
+        self.ch = logging.StreamHandler(sys.stdout)
+        self.ch.setLevel(logging.DEBUG)
+        self.formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        self.ch.setFormatter(self.formatter)
+        self.log.addHandler(self.ch)
 
     def check_config(self, request):
         """Check the incoming request for valid info."""
@@ -235,36 +247,40 @@ class dt_misp_module_base:
         return True
 
     def process_request(self, request_raw):
-        if self.debug:
-            self.log.debug("process_request: {0}".format(request_raw))
-        request = json.loads(request_raw)
-        proceed = self.check_config(request)
-        if proceed:
-            for type in self.misp_attributes['input']:
-                if type in request:
-                    for svc in self.svc_map[type]:
-                        try:
-                            svc(request[type])
-                        except BadRequestException as e:
-                            self.log.debug("API returned a Bad Request response: {0}".format(request[type]))
-                            pass
-                        except NotAuthorizedException as e:
-                            self.log.debug("API returned a Not Authorized response: {0}".format(request[type]))
-                            pass
-                        except NotFoundException as e:
-                            self.log.debug("API returned a Not Found response: {0}".format(request[type]))
-                            pass
-                        except InternalServerErrorException as e:
-                            self.log.debug("API returned a Internal Server Error response: {0}".format(request[type]))
-                            pass
-                        except ServiceUnavailableException as e:
-                            self.log.debug("API returned a Service Unavailable response: {0}".format(request[type]))
-                            pass
-                        except ServiceException as e:
-                            self.log.debug("API returned a Service Error response: {0}".format(request[type]))
-                            pass
-                    break  # can there realistically be more than one type in a request?
-            return {'results': self.payload}
+        try:
+            self.__init__()
+            if self.debug:
+                self.log.debug("process_request: {0}".format(request_raw))
+            request = json.loads(request_raw)
+            proceed = self.check_config(request)
+            if proceed:
+                for type in self.misp_attributes['input']:
+                    if type in request:
+                        for svc in self.svc_map[type]:
+                            try:
+                                svc(request[type])
+                            except BadRequestException as e:
+                                self.log.debug("API returned a Bad Request response: {0}".format(request[type]))
+                                pass
+                            except NotAuthorizedException as e:
+                                self.log.debug("API returned a Not Authorized response: {0}".format(request[type]))
+                                pass
+                            except NotFoundException as e:
+                                self.log.debug("API returned a Not Found response: {0}".format(request[type]))
+                                pass
+                            except InternalServerErrorException as e:
+                                self.log.debug("API returned a Internal Server Error response: {0}".format(request[type]))
+                                pass
+                            except ServiceUnavailableException as e:
+                                self.log.debug("API returned a Service Unavailable response: {0}".format(request[type]))
+                                pass
+                            except ServiceException as e:
+                                self.log.debug("API returned a Service Error response: {0}".format(request[type]))
+                                pass
+                        break  # can there realistically be more than one type in a request?
+                return {'results': self.payload}
+        except NotFoundException as e:
+            self.errors = {'results': 'No information found'}
 
         return self.errors
 
@@ -395,7 +411,7 @@ class dt_api_adapter_misp():
                                                    'values': {'domain age': '{0} created {1} ago'.format(q, age)},
                                                    'comment': 'domain age from DomainTools',
                                                    'tags': ['DomainTools', 'domain age']})
-                print("created_date: {0} -> {1}".format(self.helper.safe_get_result, age))
+                # print("created_date: {0} -> {1}".format(self.helper.safe_get_result, age))
             self.helper.simple_parse('other_properties', results)
 
         return True
@@ -613,7 +629,7 @@ class dt_api_adapter_misp():
                              'tags': ['DomainTools', 'co-located domain count']})
 
                     if self.helper.module_has_type('expansion'):
-                        limit = int(self.config.get('results_limit'))
+                        limit = int(self.plugin.config.get('results_limit'))
                         for d in item['domain_names']:
                             if limit == 0:
                                 break
@@ -637,7 +653,7 @@ class dt_api_adapter_misp():
                          'comment': 'co-located domain count from DomainTools',
                          'tags': ['DomainTools', 'co-located domain count']})
                 if self.helper.module_has_type('expansion'):
-                    limit = int(self.config.get('results_limit'))
+                    limit = int(self.plugin.config.get('results_limit'))
                     for d in self.helper.safe_get_result['domain_names']:
                         if limit == 0:
                             break
@@ -716,7 +732,7 @@ class dt_api_adapter_misp():
                                                    'tags': ['DomainTools', 'co-located domain count']})
 
                 if self.helper.module_has_type('expansion'):
-                    limit = int(self.config.get('results_limit'))
+                    limit = int(self.plugin.config.get('results_limit'))
                     for d in self.helper.safe_get_result['domain_names']:
                         if limit == 0:
                             break
