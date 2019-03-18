@@ -5,7 +5,7 @@ from domaintools_misp.iris_pivot import dt_misp_module_iris_pivot
 from domaintools_misp.pivot import dt_misp_module_pivot
 from domaintools_misp.historic import dt_misp_module_historic
 
-__version__ = '0.1.6'
+__version__ = '0.1.7'
 
 def register(mhandlers, loaded_modules):
     mhandlers.pop('domaintools', None)
@@ -35,4 +35,4 @@ def register(mhandlers, loaded_modules):
 
     mhandlers['DomainTools-Iris-Import'] = dt_misp_module_iris_import()
     mhandlers['type:DomainTools-Iris-Import'] = 'import'
-    loaded_modules.append('DomainTools-Iris-Pivot')
+    loaded_modules.append('DomainTools-Iris-Import')
