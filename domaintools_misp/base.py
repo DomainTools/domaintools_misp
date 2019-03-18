@@ -5,6 +5,7 @@ import re
 import hashlib
 import logging
 import sys
+import base64
 from dateutil import parser
 from domaintools import API
 from domaintools.exceptions import (BadRequestException, InternalServerErrorException, NotAuthorizedException,
@@ -175,20 +176,89 @@ class dt_module_helpers():
                 {'types': _types, 'values': {_label.format(_what.replace('_', ' ')): _from_where},
                  'comment': _comment.format(_what.replace('_', ' ')), 'tags': _tags, 'categories': _categories})
 
+    def iris_add(self, item, type, label, categories=['External analysis']):
+        count = None
+        tags = ['DomainTools', 'Iris']
+        threshold = int(self.plugin.config.get('guided_pivot_threshold'))
+
+        if self.safe_get(item, 'count'):
+            count = self.safe_get_result
+            comment = '{0} (GP: {1:,}) from DomainTools Iris'.format(label, count)
+        else:
+            comment = '{0} from DomainTools Iris'.format(label)
+
+        if count and count < threshold:
+            tags.append('Guided Pivot')
+
+        self.simple_parse('value', item, type, comment, tags, label, _categories=categories)
+
+    def iris_address(self, item, label):
+
+        if self.safe_get(item, 'name'):
+            if label == 'Registrant Contact':
+                self.iris_add(self.safe_get_result, ['whois-registrant-name'], '{0} Name'.format(label),
+                              categories=['Attribution'])
+            else:
+                self.iris_add(self.safe_get_result, ['text'], '{0} Name'.format(label))
+
+        if self.safe_get(item, 'org'):
+            self.iris_add(self.safe_get_result, ['text'], '{0} Org'.format(label))
+        if self.safe_get(item, 'street'):
+            self.iris_add(self.safe_get_result, ['text'], '{0} Street'.format(label))
+        if self.safe_get(item, 'state'):
+            self.iris_add(self.safe_get_result, ['text'], '{0} State'.format(label))
+        if self.safe_get(item, 'city'):
+            self.iris_add(self.safe_get_result, ['text'], '{0} City'.format(label))
+        if self.safe_get(item, 'country'):
+            self.iris_add(self.safe_get_result, ['text'], '{0} Country'.format(label))
+        if self.safe_get(item, 'fax'):
+            self.iris_add(self.safe_get_result, ['text'], '{0} Fax'.format(label))
+        if self.safe_get(item, 'postal'):
+            self.iris_add(self.safe_get_result, ['text'], '{0} Postal'.format(label))
+        if self.safe_get(item, 'phone'):
+            self.iris_add(self.safe_get_result, ['text'], '{0} Phone'.format(label))
+
+        for email in item['email']:
+            if label == 'Registrant Contact':
+                self.iris_add(email, ['whois-registrant-email'], '{0} Email'.format(label), categories=['Attribution'])
+            else:
+                self.iris_add(email, ['text'], '{0} Email'.format(label))
+
+    def guided_pivots_value(self, value, label):
+        if type(value) is list:
+            for item in value:
+                self.guided_pivots_value(item, label)
+            return
+
+        if type(value) is not dict:
+            # not countable property
+            return
+
+        if 'count' in value and value['count'] > 0 and value['count'] < 300:
+            self.append_unique_payload({'types': ['text'], 'categories': ['External analysis'],
+                                               'values': {'Guided Pivot': '{0} ({1})'.format(label, value['count'])},
+                                               'comment': 'Guided Pivot',
+                                               'tags': ['DomainTools', 'Guided Pivot']})
+
+    def guided_pivots(self, iris_property, label):
+        for key, value in iris_property.items():
+            self.guided_pivots_value(value, '{0} {1}'.format(label, key))
 
 class dt_misp_module_base:
     def __init__(self):
+
         self.misp_attributes = {
             'input': ['domain', 'hostname', 'url', 'uri', 'email-src', 'email-dst', 'target-email',
                       'whois-registrant-email',
                       'whois-registrant-name', 'whois-registrant-phone', 'ip-src', 'ip-dst', 'whois-creation-date',
-                      'text'],
+                      'text', 'x509-fingerprint-sha1'],
             'output': ['whois-registrant-email', 'whois-registrant-phone', 'whois-registrant-name',
                        'whois-registrar', 'whois-creation-date', 'comment', 'domain', 'ip-src', 'ip-dst', 'text']
         }
 
         self.module_config = ['username', 'api_key', 'results_limit']
         self.results_limit = 100
+        self.guided_pivot_threshold = 300
         self.historic_enabled = False
         self.debug = False
         self.payload = list()
@@ -221,27 +291,33 @@ class dt_misp_module_base:
         if self.helper.module_has_type('expansion') and self.config.get('results_limit', None) is None:
             self.config['results_limit'] = self.results_limit
 
+        if self.helper.module_has_type('expansion') and self.config.get('guided_pivot_threshold', '') == '':
+            self.config['guided_pivot_threshold'] = self.guided_pivot_threshold
+
         self.api = dt_api_adapter_misp(self)
         self.svc_map = {
             'text': [self.api.parsed_whois, self.api.domain_profile, self.api.reputation, self.api.hosting_history,
                      self.api.whois_history, self.api.risk],
             'domain': [self.api.parsed_whois, self.api.domain_profile, self.api.reputation, self.api.hosting_history,
-                       self.api.whois_history, self.api.risk],
+                       self.api.whois_history, self.api.risk, self.api.iris_hover, self.api.iris_pivot],
             'hostname': [self.api.parsed_whois, self.api.domain_profile, self.api.reputation, self.api.hosting_history,
-                         self.api.whois_history, self.api.risk],
+                         self.api.whois_history, self.api.risk, self.api.iris_pivot],
             'url': [self.api.parsed_whois, self.api.domain_profile, self.api.reputation, self.api.hosting_history,
                     self.api.whois_history, self.api.risk],
             'uri': [self.api.parsed_whois, self.api.domain_profile, self.api.reputation, self.api.hosting_history,
                     self.api.whois_history, self.api.risk],
-            'email-src': [self.api.reverse_whois],
-            'email-dst': [self.api.reverse_whois],
+            'email-src': [self.api.reverse_whois, self.api.iris_pivot],
+            'email-dst': [self.api.reverse_whois, self.api.iris_pivot],
             'target-email': [self.api.reverse_whois],
-            'whois-registrant-email': [self.api.reverse_whois],
-            'whois-registrant-name': [self.api.reverse_whois],
+            'whois-registrant-email': [self.api.reverse_whois, self.api.iris_pivot],
+            'whois-registrant-name': [self.api.reverse_whois, self.api.iris_pivot],
             'whois-registrant-phone': [self.api.reverse_whois],
-            'ip-src': [self.api.host_domains, self.api.parsed_whois, self.api.hosting_history],
-            'ip-dst': [self.api.host_domains, self.api.parsed_whois, self.api.hosting_history],
-            'whois-creation-date': [self.api.reverse_whois]
+            'whois-registrar': [self.api.iris_pivot],
+            'ip-src': [self.api.host_domains, self.api.parsed_whois, self.api.hosting_history, self.api.iris_pivot],
+            'ip-dst': [self.api.host_domains, self.api.parsed_whois, self.api.hosting_history, self.api.iris_pivot],
+            'whois-creation-date': [self.api.reverse_whois],
+            'data': [self.api.iris_import],
+            'x509-fingerprint-sha1': [self.api.iris_pivot]
         }
 
         return True
@@ -258,7 +334,7 @@ class dt_misp_module_base:
                     if type in request:
                         for svc in self.svc_map[type]:
                             try:
-                                svc(request[type])
+                                svc(request[type], type)
                             except BadRequestException as e:
                                 self.log.debug("API returned a Bad Request response: {0}".format(request[type]))
                                 pass
@@ -284,7 +360,6 @@ class dt_misp_module_base:
 
         return self.errors
 
-
 class dt_api_adapter_misp():
     def __init__(self, plugin):
         self.plugin = plugin
@@ -293,6 +368,7 @@ class dt_api_adapter_misp():
         self.api = API(username=plugin.config.get('username'), key=plugin.config.get('api_key'), app_partner='MISP',
                        app_name=plugin.module['name'], app_version=plugin.module_info['version'])
         self.account_information = self.api.account_information().data()
+
         for svc in self.account_information['response']['products']:
             if svc['per_month_limit'] is not None:
                 self.svc_enabled[svc['id']] = int(svc['per_month_limit']) - int(svc['usage']['month'])
@@ -300,12 +376,16 @@ class dt_api_adapter_misp():
             else:
                 self.svc_enabled[svc['id']] = True
 
-    def parsed_whois(self, query):
+    def parsed_whois(self, query, query_type):
         if 'parsed-whois' not in self.svc_enabled or self.svc_enabled['parsed-whois'] <= 0:
             if self.plugin.debug:
                 self.plugin.log.debug("parsed-whois: service disabled or over monthly limit")
 
         if self.plugin.module['name'] == 'DomainTools-Historic':
+            return True
+        if self.plugin.module['name'] == 'DomainTools-Iris-Analyze':
+            return True
+        if self.plugin.module['name'] == 'DomainTools-Iris-Pivot':
             return True
 
         tldex = tldextract.extract(query.replace('\\/', '/'))
@@ -416,7 +496,7 @@ class dt_api_adapter_misp():
 
         return True
 
-    def whois(self, query):
+    def whois(self, query, query_type):
         if 'whois' not in self.svc_enabled or self.svc_enabled['whois'] <= 0:
             if self.plugin.debug:
                 self.log.debug("whois: service disabled or over monthly limit")
@@ -443,12 +523,16 @@ class dt_api_adapter_misp():
 
         return True
 
-    def domain_profile(self, query):
+    def domain_profile(self, query, query_type):
         if 'domain-profile' not in self.svc_enabled or self.svc_enabled['domain-profile'] <= 0:
             if self.plugin.debug:
                 self.log.debug("domain-profile: service disabled or over monthly limit")
 
         if self.plugin.module['name'] == 'DomainTools-Historic':
+            return True
+        if self.plugin.module['name'] == 'DomainTools-Iris-Analyze':
+            return True
+        if self.plugin.module['name'] == 'DomainTools-Iris-Pivot':
             return True
 
         tldex = tldextract.extract(query.replace('\\/', '/'))
@@ -512,12 +596,16 @@ class dt_api_adapter_misp():
                                                'tags': ['DomainTools', 'whois', 'registrar']})
         return True
 
-    def reputation(self, query):
+    def reputation(self, query, query_type):
         if 'reputation' not in self.svc_enabled or self.svc_enabled['reputation'] <= 0:
             if self.plugin.debug:
                 self.log.debug("reputation: service disabled or over monthly limit")
 
         if self.plugin.module['name'] == 'DomainTools-Historic':
+            return True
+        if self.plugin.module['name'] == 'DomainTools-Iris-Analyze':
+            return True
+        if self.plugin.module['name'] == 'DomainTools-Iris-Pivot':
             return True
 
         tldex = tldextract.extract(query.replace('\\/', '/'))
@@ -554,12 +642,16 @@ class dt_api_adapter_misp():
                                                    'tags': ['DomainTools', 'domain reputation score reason']})
         return True
 
-    def risk(self, query):
+    def risk(self, query, query_type):
         if 'risk' not in self.svc_enabled or self.svc_enabled['risk'] <= 0:
             if self.plugin.debug:
                 self.log.debug("risk: service disabled or over monthly limit")
 
         if self.plugin.module['name'] == 'DomainTools-Historic':
+            return True
+        if self.plugin.module['name'] == 'DomainTools-Iris-Analyze':
+            return True
+        if self.plugin.module['name'] == 'DomainTools-Iris-Pivot':
             return True
 
         tldex = tldextract.extract(query.replace('\\/', '/'))
@@ -591,12 +683,16 @@ class dt_api_adapter_misp():
                          'tags': ['DomainTools', 'risk score reason']})
         return True
 
-    def reverse_ip(self, query):
+    def reverse_ip(self, query, query_type):
         if 'reverse-ip' not in self.svc_enabled or self.svc_enabled['reverse-ip'] <= 0:
             if self.plugin.debug:
                 self.log.debug("reverse-ip: service disabled or over monthly limit")
 
         if self.plugin.module['name'] == 'DomainTools-Historic':
+            return True
+        if self.plugin.module['name'] == 'DomainTools-Iris-Analyze':
+            return True
+        if self.plugin.module['name'] == 'DomainTools-Iris-Pivot':
             return True
 
         tldex = tldextract.extract(query.replace('\\/', '/'))
@@ -665,12 +761,16 @@ class dt_api_adapter_misp():
                                                                'tags': ['DomainTools', 'reverse ip domain']})
         return True
 
-    def reverse_whois(self, query):
+    def reverse_whois(self, query, query_type):
         if 'reverse-whois' not in self.svc_enabled or self.svc_enabled['reverse-whois'] <= 0:
             if self.plugin.debug:
                 self.log.debug("reverse-whois: service disabled or over monthly limit")
 
         if self.plugin.module['name'] == 'DomainTools-Historic':
+            return True
+        if self.plugin.module['name'] == 'DomainTools-Iris-Analyze':
+            return True
+        if self.plugin.module['name'] == 'DomainTools-Iris-Pivot':
             return True
 
         if self.helper.module_has_type('expansion'):
@@ -704,12 +804,16 @@ class dt_api_adapter_misp():
                                                    'tags': ['DomainTools', 'reverse whois']})
         return True
 
-    def host_domains(self, query):
+    def host_domains(self, query, query_type):
         if 'reverse-ip' not in self.svc_enabled or self.svc_enabled['reverse-ip'] <= 0:
             if self.plugin.debug:
                 self.log.debug("reverse-ip: service disabled or over monthly limit")
 
         if self.plugin.module['name'] == 'DomainTools-Historic':
+            return True
+        if self.plugin.module['name'] == 'DomainTools-Iris-Analyze':
+            return True
+        if self.plugin.module['name'] == 'DomainTools-Iris-Pivot':
             return True
 
         if self.helper.module_has_type('expansion'):
@@ -744,7 +848,7 @@ class dt_api_adapter_misp():
                                                                'tags': ['DomainTools', 'co-located domain']})
         return True
 
-    def hosting_history(self, query):
+    def hosting_history(self, query, query_type):
         if 'hosting-history' not in self.svc_enabled or self.svc_enabled['hosting-history'] <= 0:
             if self.plugin.debug:
                 self.log.debug("hosting-history: service disabled or over monthly limit")
@@ -806,7 +910,7 @@ class dt_api_adapter_misp():
                                                                 'historic']})
         return True
 
-    def whois_history(self, query):
+    def whois_history(self, query, query_type):
         if 'whois-history' not in self.svc_enabled or self.svc_enabled['whois-history'] <= 0:
             if self.plugin.debug:
                 self.log.debug("whois-history: service disabled or over monthly limit")
@@ -839,3 +943,317 @@ class dt_api_adapter_misp():
                                                            'tags': ['DomainTools', 'whois history']})
         return True
 
+    def iris_hover(self, query, query_type):
+        if 'iris-investigate' not in self.svc_enabled or self.svc_enabled['iris-investigate'] <= 0:
+            if self.plugin.debug:
+                self.log.debug("iris-investigate: service disabled or over monthly limit")
+
+        if self.plugin.module['name'] != 'DomainTools-Iris-Analyze':
+            return True
+
+        tldex = tldextract.extract(query.replace('\\/', '/'))
+        q = '.'.join(tldex[1:])
+        if q == '':
+            self.log.debug("q is empty")
+            return True
+
+        method = self.api.iris_investigate(q)
+        results = method.data()
+        results = results['response']
+
+        if method._status != 200:
+            return
+        if results.get('error'):
+            self.errors['error'] = results['error']['message']
+            return False
+
+        if not self.helper.safe_get(results, 'results'):
+            return True
+
+        result = self.helper.safe_get_result.pop()
+
+        if self.helper.safe_path(result, ['create_date', 'value']) and self.helper.safe_path_result != '':
+            create_date = self.helper.safe_path_result
+            age = self.helper.calculate_age(create_date)
+            self.helper.append_unique_payload({'types': ['text'], 'categories': ['External analysis'],
+                                               'values': {'Create Date': '{0}'.format(create_date)},
+                                               'comment': 'Create Date from DomainTools',
+                                               'tags': ['DomainTools', 'Create Date']})
+            self.helper.append_unique_payload({'types': ['text'], 'categories': ['External analysis'],
+                                               'values': {'Domain Age': '{0} created {1} ago'.format(q, age)},
+                                               'comment': 'Domain Age from DomainTools',
+                                               'tags': ['DomainTools', 'Domain Age']})
+
+        if self.helper.safe_get(result, 'registrant_contact'):
+            registrant_contact = self.helper.safe_get_result
+            self.helper.simple_parse('value', registrant_contact['name'], ['text'], 'registrant name from DomainTools',
+                                     ['DomainTools', 'Iris'], 'registrant name')
+            for email in registrant_contact['email']:
+                self.helper.simple_parse('value', email, ['whois-registrant-email'], 'Registrant Email from DomainTools',
+                                         ['DomainTools', 'Iris'], 'Registrant Email')
+        if self.helper.safe_get(result, 'registrar'):
+            self.helper.simple_parse('value', self.helper.safe_get_result, ['text'], 'Registrar from DomainTools',
+                                     ['DomainTools', 'Iris'], 'Registrar Name')
+
+        if self.helper.safe_get(result, 'ip'):
+            for ip in self.helper.safe_get_result:
+                self.helper.simple_parse('value', ip['address'], ['ip-dst'], 'IP address from DomainTools',
+                                         ['DomainTools', 'Iris'], 'IP Address')
+                self.helper.simple_parse('value', ip['country_code'], ['text'], 'country code from DomainTools',
+                                         ['DomainTools', 'Iris'], 'IP Country Code')
+                self.helper.simple_parse('value', ip['isp'], ['text'], 'ISP from DomainTools',
+                                         ['DomainTools', 'Iris'], 'IP ISP')
+
+        if self.helper.safe_get(result, 'domain_risk'):
+            risk = self.helper.safe_get_result
+            self.helper.simple_parse('risk_score', risk, ['text'], 'Risk from DomainTools',
+                                     ['DomainTools', 'Iris'], 'Risk Score')
+            for index, component in enumerate(risk['components']):
+                self.helper.append_unique_payload({'types': ['text'], 'categories': ['External analysis'],
+                                                   'values': {'Risk Component': '{0} ({1})'.format(component['name'], component['risk_score'])},
+                                                   'comment': 'Risk Component from DomainTools',
+                                                   'tags': ['DomainTools', 'name server']})
+
+        if self.helper.safe_get(result, 'name_server'):
+            for index, name_server in zip(range(2), self.helper.safe_get_result):
+                self.helper.simple_parse('value', name_server['host'], ['host'], 'Name Server from DomainTools',
+                                         ['DomainTools', 'Iris'], 'Name Server')
+
+        if self.helper.safe_get(result, 'mx'):
+            for index, name_server in zip(range(2), self.helper.safe_get_result):
+                self.helper.simple_parse('value', name_server['host'], ['text'], 'Mail Server from DomainTools',
+                                         ['DomainTools', 'Iris'], 'Mail Server Host')
+
+        if self.helper.safe_get(result, 'ssl_info'):
+            for ssl in self.helper.safe_get_result:
+                self.helper.simple_parse('value', ssl['organization'], ['text'], 'SSL Org from DomainTools',
+                                     ['DomainTools', 'Iris'], 'SSL Org')
+
+        # guided pivots
+        if self.helper.safe_get(result, 'create_date'):
+            self.helper.guided_pivots_value(self.helper.safe_get_result, 'create date')
+        if self.helper.safe_get(result, 'technical_contact'):
+            self.helper.guided_pivots(self.helper.safe_get_result, 'technical contact')
+        if self.helper.safe_get(result, 'admin_contact'):
+            self.helper.guided_pivots(self.helper.safe_get_result, 'admin contact')
+        if self.helper.safe_get(result, 'billing_contact'):
+            self.helper.guided_pivots(self.helper.safe_get_result, 'billing contact')
+        if self.helper.safe_get(result, 'redirect_domain'):
+            self.helper.guided_pivots_value(self.helper.safe_get_result, 'redirect domain')
+        if self.helper.safe_get(result, 'expiration_date'):
+            self.helper.guided_pivots_value(self.helper.safe_get_result, 'expiration date')
+        if self.helper.safe_get(result, 'registrar'):
+            self.helper.guided_pivots_value(self.helper.safe_get_result, 'registrar')
+        if self.helper.safe_get(result, 'google_analytics'):
+            self.helper.guided_pivots_value(self.helper.safe_get_result, 'google analytics')
+        if self.helper.safe_get(result, 'registrant_contact'):
+            self.helper.guided_pivots(self.helper.safe_get_result, 'registrant contact')
+        if self.helper.safe_get(result, 'registrant_org'):
+            self.helper.guided_pivots(self.helper.safe_get_result, 'registrant organization')
+        if self.helper.safe_get(result, 'registrant_name'):
+            self.helper.guided_pivots(self.helper.safe_get_result, 'registrant name')
+        if self.helper.safe_get(result, 'ip'):
+            for ip in self.helper.safe_get_result:
+                self.helper.guided_pivots(ip, 'ip')
+        if self.helper.safe_get(result, 'ssl_info'):
+            for ssl in self.helper.safe_get_result:
+                self.helper.guided_pivots(ssl, 'ssl')
+        if self.helper.safe_get(result, 'mx'):
+            for mx in self.helper.safe_get_result:
+                self.helper.guided_pivots(mx, 'mx')
+        if self.helper.safe_get(result, 'email_domain'):
+            for email_domain in self.helper.safe_get_result:
+                self.helper.guided_pivots_value(email_domain, 'email_domain')
+
+
+        return True
+
+    def iris_pivot(self, query, query_type):
+        if 'iris-investigate' not in self.svc_enabled or self.svc_enabled['iris-investigate'] <= 0:
+            if self.plugin.debug:
+                self.log.debug("iris-investigate: service disabled or over monthly limit")
+
+        if self.plugin.module['name'] != 'DomainTools-Iris-Pivot':
+            return True
+
+        pivot_map = {
+            'domain': 'domain',
+            'ip-src': 'ip',
+            'ip-dst': 'ip',
+            'whois-registrant-email': 'email',
+            'email-dst': 'email',
+            'email-src': 'email',
+            'hostname': 'nameserver_host',
+            'whois-registrar': 'registrar',
+            'whois-registrant-name': 'registrant',
+            'x509-fingerprint-sha1': 'ssl_hash'
+        }
+
+        if query_type == 'domain':
+            self.iris_pivot_domain(query)
+        elif query_type in pivot_map:
+            self.iris_pivot_other(query, pivot_map[query_type])
+
+        return True
+
+    def iris_pivot_other(self, query, pivot_type):
+        arguments = {pivot_type: query}
+        method = self.api.iris_investigate(**arguments)
+
+        results = method.data()
+        results = results['response']
+
+        if method._status != 200:
+            return
+        if results.get('error'):
+            self.errors['error'] = results['error']['message']
+            return False
+
+        if not self.helper.safe_get(results, 'results'):
+            return True
+
+        limit = int(self.plugin.config.get('results_limit'))
+        for result in self.helper.safe_get_result[0:limit]:
+            self.helper.simple_parse('domain', result, ['domain'], 'Domain from DomainTools Iris',
+                                     ['DomainTools', 'Iris'], 'Domain')
+
+    def iris_pivot_domain(self, query):
+        tldex = tldextract.extract(query.replace('\\/', '/'))
+        q = '.'.join(tldex[1:])
+        if q == '':
+            self.log.debug("q is empty")
+            return True
+
+        method = self.api.iris_investigate(q)
+        results = method.data()
+        results = results['response']
+
+        if method._status != 200:
+            return
+        if results.get('error'):
+            self.errors['error'] = results['error']['message']
+            return False
+
+        if not self.helper.safe_get(results, 'results'):
+            return True
+
+        result = self.helper.safe_get_result.pop()
+
+        self.helper.simple_parse('alexa', result, ['text'], 'Alexa from DomainTools',
+                                 ['DomainTools', 'Iris'], 'Alexa')
+        self.helper.simple_parse('spf_info', result, ['text'], 'SPF Info from DomainTools',
+                                 ['DomainTools', 'Iris'], 'SPF')
+        self.helper.simple_parse('website_response', result, ['text'], 'Website Response from DomainTools',
+                                 ['DomainTools', 'Iris'], 'Website Response')
+        self.helper.simple_parse('alexa', result, ['text'], 'Alexa from DomainTools',
+                                 ['DomainTools', 'Iris'], 'Alexa')
+
+        if self.helper.safe_get(result, 'create_date'):
+            self.helper.iris_add(self.helper.safe_get_result, ['whois-creation-date'], 'Create Date', categories=['Attribution'])
+        if self.helper.safe_get(result, 'expiration_date'):
+            self.helper.iris_add(self.helper.safe_get_result, ['text'], 'Expiration Date')
+        if self.helper.safe_get(result, 'redirect_domain'):
+            self.helper.iris_add(self.helper.safe_get_result, ['domain'], 'Redirect Domain')
+        if self.helper.safe_get(result, 'registrar'):
+            self.helper.iris_add(self.helper.safe_get_result, ['whois-registrar'], 'Registrar'
+                                 , categories=['Attribution'])
+        if self.helper.safe_get(result, 'adsense'):
+            self.helper.iris_add(self.helper.safe_get_result, ['text'], 'Adsense')
+
+        if self.helper.safe_get(result, 'technical_contact'):
+            self.helper.iris_address(self.helper.safe_get_result, 'Technical Contact')
+        if self.helper.safe_get(result, 'registrant_contact'):
+            self.helper.iris_address(self.helper.safe_get_result, 'Registrant Contact')
+        if self.helper.safe_get(result, 'admin_contact'):
+            self.helper.iris_address(self.helper.safe_get_result, 'Admin Contact')
+        if self.helper.safe_get(result, 'billing_contact'):
+            self.helper.iris_address(self.helper.safe_get_result, 'Billing Contact')
+
+        if self.helper.safe_get(result, 'ip'):
+            ips = self.helper.safe_get_result
+            for ip in ips:
+                self.helper.iris_add(ip['address'], ['ip-dst'], 'IP Address')
+                self.helper.iris_add(ip['country_code'], ['text'], 'Country Code')
+                self.helper.iris_add(ip['isp'], ['text'], 'IP ISP')
+
+                for asn in ip['asn']:
+                    self.helper.iris_add(asn, ['text'], 'IP ASN')
+
+        if self.helper.safe_get(result, 'ssl_info'):
+            for ssl in self.helper.safe_get_result:
+                self.helper.iris_add(ssl['organization'], ['text'], 'SSL Org')
+                self.helper.iris_add(ssl['subject'], ['text'], 'SSL Subject')
+                self.helper.iris_add(ssl['hash'], ['x509-fingerprint-sha1'], 'SSL Hash')
+
+                for email in ssl['email']:
+                    self.helper.iris_add(email, ['email-dst'], 'SSL Email', categories=['Network activity'])
+
+        if self.helper.safe_get(result, 'name_server'):
+            for name_server in self.helper.safe_get_result:
+                self.helper.iris_add(name_server['host'], ['hostname'], 'Name Server Host')
+                self.helper.iris_add(name_server['domain'], ['domain'], 'Name Server Domain')
+
+                for ip in name_server['ip']:
+                    self.helper.iris_add(ip, ['ip-src'], 'Name Server IP')
+
+        if self.helper.safe_get(result, 'mx'):
+            for mx in self.helper.safe_get_result:
+                self.helper.iris_add(mx['host'], ['hostname'], 'Mail Server Host')
+                self.helper.iris_add(mx['domain'], ['domain'], 'Mail Server Domain')
+
+                for ip in mx['ip']:
+                    self.helper.iris_add(ip, ['ip-src'], 'Mail Server IP')
+
+        if self.helper.safe_get(result, 'soa_email'):
+            for soa in self.helper.safe_get_result:
+                self.helper.iris_add(soa, ['email-dst'], 'SOA email', categories=['Network activity'])
+
+        if self.helper.safe_get(result, 'additional_whois_email'):
+            for email in self.helper.safe_get_result:
+                self.helper.iris_add(email, ['whois-registrant-email'], 'Whois Email', categories=['Attribution'])
+
+        if self.helper.safe_get(result, 'domain_risk'):
+            risk = self.helper.safe_get_result
+            self.helper.simple_parse('risk_score', risk, ['text'], 'Risk Score from DomainTools',
+                                     ['DomainTools', 'Iris'], 'Risk Score')
+            for index, component in enumerate(risk['components']):
+                self.helper.append_unique_payload({'types': ['text'], 'categories': ['External analysis'], 'values': {
+                    '{0} Risk Component'.format(component['name']): '{0}'.format(component['risk_score'],
+                                                                                 component['risk_score'])},
+                                                   'comment': '{0} Risk Component from DomainTools'.format(
+                                                       component['name']),
+                                                   'tags': ['DomainTools', 'Iris']})
+
+    def iris_import(self, query, query_type):
+        if 'iris-import' not in self.svc_enabled or self.svc_enabled['iris-import'] <= 0:
+            if self.plugin.debug:
+                self.log.debug("iris-import: service disabled or over monthly limit")
+
+        if self.plugin.module['name'] != 'DomainTools-Iris-Import':
+            return True
+
+        q = base64.b64decode(query)
+        if q == '':
+            self.log.debug("query is empty")
+            return True
+
+        method = self.api.iris_investigate(search_hash=q)
+
+        results = method.data()
+        results = results['response']
+
+        if method._status != 200:
+            return
+        if results.get('error'):
+            self.errors['error'] = results['error']['message']
+            return False
+
+        if not self.helper.safe_get(results, 'results'):
+            return True
+
+        limit = int(self.plugin.config.get('results_limit'))
+        for result in self.helper.safe_get_result[0:limit]:
+            self.helper.simple_parse('domain', result, ['domain'], 'Domain from DomainTools Iris',
+                                 ['DomainTools', 'Iris'], 'Domain')
+
+        return True
