@@ -3,7 +3,7 @@
 
 The [DomainTools](https://domaintools.com) MISP modules extend the MISP hover and expansion features to show domain name profiles and discover connected domains. They are powered by the DomainTools Iris and DomainTools Enterprise APIs.
 
-Complete details including a demo video are available at [https://domaintools.com/misp](https://domaintools.com/misp).
+Complete details including a demo video are available at [https://www.domaintools.com/integrations/misp/](https://www.domaintools.com/integrations/misp/).
 
 ## Iris Modules
 These modules work with the DomainTools Iris Investigate API and represent the latest generation of DomainTools capabilities for MISP. They are recommended for all new deployments.
@@ -55,10 +55,10 @@ To use the modules with the misp-modules prior architecture:
 NOTE: These modules require specialized API endpoints that are not available with a DomainTools Iris subscription. Contact us to learn how to get access to them. (EnterpriseSupport at DomainTools dot com).
 
 ### DomainTools-Analyze
-The DomainTools Analyze module is Optimized for MISP hover-actions, but can also be used for expansions. It provides essential Whois data, a domain name reputation score, and counts of related domains
+The DomainTools Analyze module is Optimized for MISP hover-actions, but can also be used for expansions. It provides essential Whois data, a domain name risk score, and counts of related domains
 
 ### DomainTools-Pivot
-The DomainTools Pivot module expands domains and hostnames to include a complete set of Whois attributes, plus reputation scores and counts of related domains. The Pivot module will also expand email addresses to a list of other domains that share the same contact information, and expand IP addresses to the list of other domains pointed to the same IP.
+The DomainTools Pivot module expands domains and hostnames to include a complete set of Whois attributes, plus risk scores and counts of related domains. The Pivot module will also expand email addresses to a list of other domains that share the same contact information, and expand IP addresses to the list of other domains pointed to the same IP.
 
 ### DomainTools-Historic
 The DomainTools Historic module accesses historical Whois and hosting history to expand domain names to lists of registrars, IPs and emails historically connected with that domain.
