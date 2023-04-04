@@ -5,26 +5,30 @@ from domaintools_misp import base
 
 logger = logging.getLogger(__name__)
 
-class dt_misp_module_analyze(base.dt_misp_module_base):
 
-    def __init__(self, debug = False):
+class dt_misp_module_analyze(base.dt_misp_module_base):
+    def __init__(self, debug=False):
         self.module_info = {
-            'version': '1.8.9',
-            'author': 'DomainTools, LLC',
-            'description': 'The DomainTools Analyze module is Optimized for MISP hover-actions, but can also be used for expansions. It provides essential Whois data, a domain name reputation score, and counts of related domains.',
-            'module-type': ['hover']
+            "version": "2.0",
+            "author": "DomainTools, LLC",
+            "description": """
+                This module is superseded by the Iris Investigate module but remains here for backward compatibility.
+                Optimized for MISP hover actions, the Analyze capability provides Whois data, a Domain Risk Score and counts of connected domains to help give quick context on an indicator to inform an interesting pivot and map connected infrastructure.
+                Leverages the following DomainTools endpoints: Parsed Whois, Domain Profile, Risk, Reverse IP, Reverse Whois.
+                """,
+            "module-type": ["hover"],
         }
-        self.module = {
-            'name': 'DomainTools-Analyze'
-        }
+        self.module = {"name": "DomainTools-Analyze"}
         base.dt_misp_module_base.__init__(self)
 
         if debug:
-            self.log = logging.getLogger('DomainTools Analyze')
+            self.log = logging.getLogger("DomainTools Analyze")
             self.log.setLevel(logging.DEBUG)
             self.ch = logging.StreamHandler(sys.stdout)
             self.ch.setLevel(logging.DEBUG)
-            self.formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            self.formatter = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
             self.ch.setFormatter(self.formatter)
             self.log.addHandler(self.ch)
             self.debug = True
@@ -38,5 +42,5 @@ class dt_misp_module_analyze(base.dt_misp_module_base):
         return self.misp_attributes
 
     def version(self):
-        self.module_info['config'] = self.module_config
+        self.module_info["config"] = self.module_config
         return self.module_info

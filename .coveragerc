@@ -1,3 +1,0 @@
-[report]
-include = */domaintools/misp/*.py
-exclude_lines = def main
