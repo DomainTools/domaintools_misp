@@ -65,6 +65,7 @@ To use the modules with the misp-modules prior architecture:
     cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Iris-Investigate.py /path/to/python/dist/misp_modules/modules/expansion/
     cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Iris-Enrich.py /path/to/python/dist/misp_modules/modules/expansion/
     cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Iris-Import.py /path/to/python/dist/misp_modules/modules/expansion/
+    cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Iris-Detect.py /path/to/python/dist/misp_modules/modules/expansion/
 
 ## Enterprise API Modules
 

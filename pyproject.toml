@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "domaintools_misp"
+version = "0.2.1"
+authors = [
+  { name="DomainTools", email="support@domaintools.com" },
+]
+dependencies = ["tldextract", "python-dateutil", "aiohttp", "domaintools_api"]
+description = "The DomainTools MISP library"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+"Homepage" = "http://www.domaintools.com/"
+"GitHub" = "https://github.com/DomainTools/domaintools_misp"
