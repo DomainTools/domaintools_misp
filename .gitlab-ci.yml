@@ -1,8 +1,13 @@
+image: python:3.9
+
+before_script:
+  - pip install -r requirements.txt
+  - pip install -e .
+
 stages:
-    - build
+  - build
 
 jobtest:
-    stage: build
-    script:
-        - tox
-        - ci_submit
+  stage: build
+  script:
+    - tox

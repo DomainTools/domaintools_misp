@@ -1,44 +1,59 @@
 # DomainTools MISP Modules
 
-
 The [DomainTools](https://domaintools.com) MISP modules extend the MISP hover and expansion features to show domain name profiles and discover connected domains. They are powered by the DomainTools Iris and DomainTools Enterprise APIs.
 
 Complete details including a demo video are available at [https://www.domaintools.com/integrations/misp/](https://www.domaintools.com/integrations/misp/).
 
+For more detailed instructions, please see the user guide at [https://www.domaintools.com/wp-content/uploads/DomainTools-For-MISP_2.0_App-User-Guide.pdf](https://www.domaintools.com/wp-content/uploads/DomainTools-For-MISP_2.0_App-User-Guide.pdf).
+
 ## Iris Modules
+
 These modules work with the DomainTools Iris Investigate API and represent the latest generation of DomainTools capabilities for MISP. They are recommended for all new deployments.
 
-### DomainTools-Iris-Analyze
-The Analyze module is designed for MISP tooltip or hover actions on domain names. It provides:
-* Domain age
-* Registrar
-* IP address
-* IP country and ISP
-* Domain Risk Score, with classifier scores
-* Fields with potential Guided Pivots to map connected infrastructure.
+### DomainTools-Iris-Investigate
+
+- Designed for MISP tooltip or hover actions on domain names
+- Provides risk scoring, domain age, hosting, Whois, MX and related infrastructure for a domain.
+- Guided Pivot counts help investigators identify connected attributes to other domain infrastructure
+- Requires Iris Investigate account provisioning
+
+### DomainTools-Iris-Enrich
+
+- Optimized for high-volume domain enrichment, providing Risk scoring, Hosting, Whois, MX and related infrastructure information for a domain.
+- Requires Iris Enrich account provisioning
 
 ### DomainTools-Iris-Pivot
-The Pivot module is designed for MISP enrichment actions on domains, IPs, emails, SSL hash, registrar and registrant. 
 
-With domains, the module returns virtually every field from the Iris dataset and maps them to MISP datatypes. Also included are tags and comments that show which attributes would make the best pivots.
-
-For other supported types, the module delivers a list of domain names that share the same attribute (i.e. shared hosting on an IP or re-using the same SSL hash). This helps discover connected infrastructure.
+- Enriches domain attributes with nearly every available field from the Iris Investigate API.
+- Includes complete Risk Score data, with component scores and evidence when available.
+- Adds Guided Pivot counts to attribute comments.
+- Tags attributes as potential Guided Pivots when connections are shared with fewer than 300 domains (this can be configured in the module attributes).
+- Enables pivots on IPs, SSL hashes, nameserver hostnames, and registrant email addresses.
+- Requires Iris Investigate account provisioning
 
 ### DomainTools-Iris-Import
-The Import module brings domain names from an investigation in the DomainTools Iris UI directly into MISP. It uses the Iris search hash to access the search and retrieve the results with the Iris Investigate API.
+
+- Import domains from the Iris Investigate Pivot Engine directly to a MISP event
+- Export an investigation from the Iris Investigate UI by copying the search hash (Menu -> Search -> Filters -> Export), importing a list of up to 5000 domains as indicators into MISP
+- Requires Iris Investigate account provisioning
+
+### DomainTools-Iris-Detect
+
+- Imports newly discovered and/or newly changed domains from DomainTools Iris Detect product.
+- Set up and manage monitored terms using the Iris Detect UI (https://iris.domaintools.com/detect/) then automatically import them into MISP using this module.
+- Requires Iris Detect account provisioning
 
 ## Get Started
+
 ### Installation Instructions
 
     pip install domaintools_api
     pip install domaintools_misp
 
-
-To use the modules with the misp-modules architecture supporting the -m module syntax, modify the misp-modules startup and use the new -m flag: 
-    misp-modules -m domaintools_misp
+To use the modules with the misp-modules architecture supporting the -m module syntax, modify the misp-modules startup and use the new -m flag:
+misp-modules -m domaintools_misp
 
 This will cause the misp-modules to dynamically load the domaintools_misp modules and inject them into the available modules
-
 
 To use the modules with the misp-modules prior architecture:
 
@@ -47,19 +62,26 @@ To use the modules with the misp-modules prior architecture:
     cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Pivot.py /path/to/python/dist/misp_modules/modules/expansion/
     cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Historic.py /path/to/python/dist/misp_modules/modules/expansion/
     cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Iris-Pivot.py /path/to/python/dist/misp_modules/modules/expansion/
-    cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Iris-Analyze.py /path/to/python/dist/misp_modules/modules/expansion/
+    cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Iris-Investigate.py /path/to/python/dist/misp_modules/modules/expansion/
+    cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Iris-Enrich.py /path/to/python/dist/misp_modules/modules/expansion/
     cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Iris-Import.py /path/to/python/dist/misp_modules/modules/expansion/
 
-
 ## Enterprise API Modules
+
 NOTE: These modules require specialized API endpoints that are not available with a DomainTools Iris subscription. Contact us to learn how to get access to them. (EnterpriseSupport at DomainTools dot com).
 
 ### DomainTools-Analyze
-The DomainTools Analyze module is Optimized for MISP hover-actions, but can also be used for expansions. It provides essential Whois data, a domain name risk score, and counts of related domains
+
+- This module is superseded by the Iris Investigate module but remains here for backward compatibility. Optimized for MISP hover actions, the Analyze capability provides Whois data, a Domain Risk Score and counts of connected domains to help give quick context on an indicator to inform an interesting pivot and map connected infrastructure.
+- Leverages the following DomainTools endpoints: Parsed Whois, Domain Profile, Risk, Reverse IP, Reverse Whois
 
 ### DomainTools-Pivot
-The DomainTools Pivot module expands domains and hostnames to include a complete set of Whois attributes, plus risk scores and counts of related domains. The Pivot module will also expand email addresses to a list of other domains that share the same contact information, and expand IP addresses to the list of other domains pointed to the same IP.
+
+- This module is superseded by the Iris Pivot module, but remains here for backward compatibility. Optimized for enrichment actions, the Pivot capability provides additional context on indicators by automatically building out a list of connected infrastructure from the counts presented in the Analyze capability.
+- The Pivot module will also expand email addresses to a list of other domains that share the same contact information, and expand IP addresses to the list of other domains pointed to the same IP.
+- Leverages the following DomainTools endpoints: Parsed Whois, Domain Profile, Risk, Reverse IP, Reverse Whois
 
 ### DomainTools-Historic
-The DomainTools Historic module accesses historical Whois and hosting history to expand domain names to lists of registrars, IPs and emails historically connected with that domain.
 
+- The Historic capability will act on Domains or URLs to find historical context by expanding domain names to lists of registrars, IPs and emails historically connected with that indicator
+- Leverages the following DomainTools endpoints: Whois History, Hosting History, Domain Profile, Reverse IP, Reverse Whois, Parsed Whois, Whois
