@@ -11,7 +11,7 @@ def dtmm_iris_pivot_resp(query_parameters, scope="session"):
     return response
 
 
-class TestIrisImport:
+class TestIrisPivot:
     @pytest.fixture(autouse=True)
     def setup(self, dtmm_iris_pivot_resp, logger):
         self.dtmm_iris_pivot_resp = dtmm_iris_pivot_resp

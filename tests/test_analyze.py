@@ -3,7 +3,7 @@ import json
 from domaintools_misp.analyze import dt_misp_module_analyze
 
 
-class TestIrisImport:
+class TestAnalyze:
     def test_analyze_has_results(self, query_parameters):
         dtmm_analyze = dt_misp_module_analyze()
         response = dtmm_analyze.handler(json.dumps(query_parameters))

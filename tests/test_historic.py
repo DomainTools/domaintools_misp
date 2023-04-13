@@ -11,7 +11,7 @@ def dtmm_historic_resp(query_parameters, scope="session"):
     return response
 
 
-class TestIrisImport:
+class TestHistoric:
     @pytest.fixture(autouse=True)
     def setup(self, dtmm_historic_resp):
         self.dtmm_historic_resp = dtmm_historic_resp

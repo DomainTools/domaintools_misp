@@ -25,7 +25,7 @@ def dtmm_iris_detect_resp(query_parameters, scope="session"):
     return response
 
 
-class TestIrisImport:
+class TestIrisDetect:
     @pytest.fixture(autouse=True)
     def setup(self, dtmm_iris_detect_resp, logger):
         self.dtmm_iris_detect_resp = dtmm_iris_detect_resp
