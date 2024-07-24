@@ -315,12 +315,12 @@ class dt_module_helpers:
                     "tags": ["DomainTools", "Guided Pivot"],
                 }
             )
-        elif "count" not in value:
+        elif value and "count" not in value:
             self.append_unique_payload(
                 {
                     "types": [ATTRIBUTE_TYPES_MAP.get(label, "text")],
                     "categories": ["External analysis"],
-                    "values": {label.title(): value["value"]},
+                    "values": {label.title(): value.get("value")},
                     "comment": f"{label.title()} from Domaintools",
                     "tags": ["DomainTools", label.title()],
                 }
