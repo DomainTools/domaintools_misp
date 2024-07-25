@@ -291,6 +291,9 @@ class dt_module_helpers:
                 self.iris_add(email, ["text"], "{0} Email".format(label))
 
     def extract_nested_value(self, value, label):
+        if not value:
+            return
+
         if type(value) is list:
             for item in value:
                 self.extract_nested_value(item, label)
@@ -315,7 +318,7 @@ class dt_module_helpers:
                     "tags": ["DomainTools", "Guided Pivot"],
                 }
             )
-        elif value and "count" not in value:
+        elif "count" not in value:
             self.append_unique_payload(
                 {
                     "types": [ATTRIBUTE_TYPES_MAP.get(label, "text")],
