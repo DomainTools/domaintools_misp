@@ -7,7 +7,7 @@ from domaintools_misp.iris_investigate import dt_misp_module_iris_investigate
 @pytest.fixture
 def dtmm_iris_investigate_resp(query_parameters, scope="session"):
     dtmm_iris_investigate = dt_misp_module_iris_investigate()
-    response = dtmm_iris_investigate.process_request(json.dumps(query_parameters))
+    response = dtmm_iris_investigate.handler(json.dumps(query_parameters))
     return response
 
 
@@ -16,6 +16,38 @@ class TestIrisInvestigate:
     def setup(self, dtmm_iris_investigate_resp, logger):
         self.dtmm_iris_investigate_resp = dtmm_iris_investigate_resp
         self.logger = logger
+
+    def test_iris_investigate_has_no_results_if_empty_query(self):
+        dtmm_iris_investigate = dt_misp_module_iris_investigate()
+        response = dtmm_iris_investigate.handler()
+        assert response == False
+
+    def test_iris_investigate_has_introspection(self, query_parameters):
+        dtmm_iris_investigate = dt_misp_module_iris_investigate(
+            json.dumps(query_parameters)
+        )
+        assert dtmm_iris_investigate.introspection() is not None
+
+    def test_iris_investigate_has_introspection_even_if_empty_query(self):
+        dtmm_iris_investigate = dt_misp_module_iris_investigate()
+        assert dtmm_iris_investigate.introspection() is not None
+
+    def test_iris_investigate_has_version(self):
+        dtmm_iris_investigate = dt_misp_module_iris_investigate()
+        expected_version = {
+            "version": "2.0",
+            "author": "DomainTools, LLC",
+            "description": """
+                Designed for MISP tooltip or hover actions on domain names.
+                Provides risk scoring, domain age, hosting, Whois, MX and related infrastructure for a domain.
+                Guided Pivot counts help investigators identify connected attributes to other domain infrastructure.
+                Requires Iris Investigate account provisioning.
+                """,
+            "module-type": ["hover"],
+            "config": ["username", "api_key", "results_limit"],
+        }
+
+        assert expected_version == dtmm_iris_investigate.version()
 
     def test_iris_investigate_if_attributes_exist_in_results(self):
         assert "results" in self.dtmm_iris_investigate_resp

@@ -291,6 +291,9 @@ class dt_module_helpers:
                 self.iris_add(email, ["text"], "{0} Email".format(label))
 
     def extract_nested_value(self, value, label):
+        if not value:
+            return
+
         if type(value) is list:
             for item in value:
                 self.extract_nested_value(item, label)
@@ -320,7 +323,7 @@ class dt_module_helpers:
                 {
                     "types": [ATTRIBUTE_TYPES_MAP.get(label, "text")],
                     "categories": ["External analysis"],
-                    "values": {label.title(): value["value"]},
+                    "values": {label.title(): value.get("value")},
                     "comment": f"{label.title()} from Domaintools",
                     "tags": ["DomainTools", label.title()],
                 }
