@@ -1,5 +1,4 @@
 import pytest
-import json
 import logging
 import os
 
@@ -14,7 +13,7 @@ def logger():
 @pytest.fixture
 def query_parameters():
     q = {
-        "domain": "helpmanageaccounts.com",
+        "domain": "foobar.com",
         "event_id": "734",
         "config": {
             "username": os.getenv("MISP_USERNAME"),
