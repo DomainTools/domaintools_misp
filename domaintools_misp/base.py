@@ -467,11 +467,23 @@ class dt_misp_module_base:
                 self.api.whois_history,
                 self.api.risk,
             ],
-            "email-src": [self.api.reverse_whois, self.api.iris_pivot],
-            "email-dst": [self.api.reverse_whois, self.api.iris_pivot],
+            "email-src": [
+                self.api.reverse_whois,
+                self.api.iris_pivot,
+            ],
+            "email-dst": [
+                self.api.reverse_whois,
+                self.api.iris_pivot,
+            ],
             "target-email": [self.api.reverse_whois],
-            "whois-registrant-email": [self.api.reverse_whois, self.api.iris_pivot],
-            "whois-registrant-name": [self.api.reverse_whois, self.api.iris_pivot],
+            "whois-registrant-email": [
+                self.api.reverse_whois,
+                self.api.iris_pivot,
+            ],
+            "whois-registrant-name": [
+                self.api.reverse_whois,
+                self.api.iris_pivot,
+            ],
             "whois-registrant-phone": [self.api.reverse_whois],
             "whois-registrar": [self.api.iris_pivot],
             "ip-src": [
@@ -514,7 +526,7 @@ class dt_misp_module_base:
                                 self.log.debug(
                                     f"API returned a {e.__class__.__name__} response for {request[type]}."
                                 )
-                                self.errors["error"] = e.reason["error"]["message"]
+                                self.errors["error"] = str(e)
                                 pass
                         break  # can there realistically be more than one type in a request?
 
@@ -574,7 +586,7 @@ class dt_api_adapter_misp:
             return True
 
         tldex = tldextract.extract(query.replace("\\/", "/"))
-        q = ".".join(tldex[1:])
+        q = tldex.top_domain_under_public_suffix
         if q == "":
             return True
         method = self.api.parsed_whois(q)
@@ -770,7 +782,7 @@ class dt_api_adapter_misp:
             return True
 
         tldex = tldextract.extract(query.replace("\\/", "/"))
-        q = ".".join(tldex[1:])
+        q = tldex.top_domain_under_public_suffix
         if q == "":
             return True
         method = self.api.domain_profile(q)
@@ -904,7 +916,7 @@ class dt_api_adapter_misp:
             return True
 
         tldex = tldextract.extract(query.replace("\\/", "/"))
-        q = ".".join(tldex[1:])
+        q = tldex.top_domain_under_public_suffix
         if q == "":
             return True
 
@@ -953,7 +965,7 @@ class dt_api_adapter_misp:
             return True
 
         tldex = tldextract.extract(query.replace("\\/", "/"))
-        q = ".".join(tldex[1:])
+        q = tldex.top_domain_under_public_suffix
         if q == "":
             return True
 
@@ -1192,7 +1204,7 @@ class dt_api_adapter_misp:
             return True
 
         tldex = tldextract.extract(query.replace("\\/", "/"))
-        q = ".".join(tldex[1:])
+        q = tldex.top_domain_under_public_suffix
         if q == "":
             return True
 
@@ -1305,7 +1317,7 @@ class dt_api_adapter_misp:
             return True
 
         tldex = tldextract.extract(query.replace("\\/", "/"))
-        q = ".".join(tldex[1:])
+        q = tldex.top_domain_under_public_suffix
         if q == "":
             return True
 
@@ -1345,7 +1357,7 @@ class dt_api_adapter_misp:
             return True
 
         tldex = tldextract.extract(query.replace("\\/", "/"))
-        q = ".".join(tldex[1:])
+        q = tldex.top_domain_under_public_suffix
         if q == "":
             self.plugin.log.debug("q is empty")
             return True
@@ -1721,7 +1733,7 @@ class dt_api_adapter_misp:
 
     def iris_pivot_domain(self, query):
         tldex = tldextract.extract(query.replace("\\/", "/"))
-        q = ".".join(tldex[1:])
+        q = tldex.top_domain_under_public_suffix
         if q == "":
             self.plugin.log.debug("q is empty")
             return True
