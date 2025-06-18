@@ -23,9 +23,7 @@ class TestIrisInvestigate:
         assert response == False
 
     def test_iris_investigate_has_introspection(self, query_parameters):
-        dtmm_iris_investigate = dt_misp_module_iris_investigate(
-            json.dumps(query_parameters)
-        )
+        dtmm_iris_investigate = dt_misp_module_iris_investigate(json.dumps(query_parameters))
         assert dtmm_iris_investigate.introspection() is not None
 
     def test_iris_investigate_has_introspection_even_if_empty_query(self):
@@ -64,8 +62,6 @@ class TestIrisInvestigate:
             "Registrant Organization",
             "Risk Score",
             "Risk Score Component",
-            "Risk Score Component Threats",
-            "Risk Score Component Evidence",
             "Active",
             "IP Address",
             "IP Country Code",

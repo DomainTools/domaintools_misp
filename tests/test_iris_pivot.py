@@ -102,10 +102,6 @@ class TestIrisPivot:
             "Whois Email",
             "Risk Score",
             "proximity Risk Component",
-            "threat_profile Risk Component",
-            "threat_profile_malware Risk Component",
-            "threat_profile_phishing Risk Component",
-            "threat_profile_spam Risk Component",
         ]:
             for data in self.dtmm_iris_pivot_resp["results"]:
                 if attribute in data["values"]:

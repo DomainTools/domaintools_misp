@@ -50,22 +50,22 @@ These modules work with the DomainTools Iris Investigate API and represent the l
     pip install domaintools_api
     pip install domaintools_misp
 
-To use the modules with the misp-modules architecture supporting the -m module syntax, modify the misp-modules startup and use the new -m flag:
-misp-modules -m domaintools_misp
+To use the modules with the misp-modules architecture supporting the -c module syntax, modify the misp-modules startup and use the new -c flag:
+`misp-modules -c /path/to/python/dist/domaintools_misp/install/modules/`
 
-This will cause the misp-modules to dynamically load the domaintools_misp modules and inject them into the available modules
+This will cause the misp-modules to dynamically load the domaintools_misp custom modules and inject them into the available modules
 
 To use the modules with the misp-modules prior architecture:
 
     rm /path/to/python/dist/misp_modules/modules/expansion/domaintools.py
-    cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Analyze.py /path/to/python/dist/misp_modules/modules/expansion/
-    cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Pivot.py /path/to/python/dist/misp_modules/modules/expansion/
-    cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Historic.py /path/to/python/dist/misp_modules/modules/expansion/
-    cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Iris-Pivot.py /path/to/python/dist/misp_modules/modules/expansion/
-    cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Iris-Investigate.py /path/to/python/dist/misp_modules/modules/expansion/
-    cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Iris-Enrich.py /path/to/python/dist/misp_modules/modules/expansion/
-    cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Iris-Import.py /path/to/python/dist/misp_modules/modules/expansion/
-    cp /path/to/python/dist/domaintools_misp/install/modules/DomainTools-Iris-Detect.py /path/to/python/dist/misp_modules/modules/expansion/
+    cp /path/to/python/dist/domaintools_misp/install/modules/expansion/DomainTools-Analyze.py /path/to/python/dist/misp_modules/modules/expansion/
+    cp /path/to/python/dist/domaintools_misp/install/modules/expansion/DomainTools-Pivot.py /path/to/python/dist/misp_modules/modules/expansion/
+    cp /path/to/python/dist/domaintools_misp/install/modules/expansion/DomainTools-Historic.py /path/to/python/dist/misp_modules/modules/expansion/
+    cp /path/to/python/dist/domaintools_misp/install/modules/expansion/DomainTools-Iris-Pivot.py /path/to/python/dist/misp_modules/modules/expansion/
+    cp /path/to/python/dist/domaintools_misp/install/modules/expansion/DomainTools-Iris-Investigate.py /path/to/python/dist/misp_modules/modules/expansion/
+    cp /path/to/python/dist/domaintools_misp/install/modules/expansion/DomainTools-Iris-Enrich.py /path/to/python/dist/misp_modules/modules/expansion/
+    cp /path/to/python/dist/domaintools_misp/install/modules/expansion/DomainTools-Iris-Import.py /path/to/python/dist/misp_modules/modules/expansion/
+    cp /path/to/python/dist/domaintools_misp/install/modules/expansion/DomainTools-Iris-Detect.py /path/to/python/dist/misp_modules/modules/expansion/
 
 ## Enterprise API Modules
 
