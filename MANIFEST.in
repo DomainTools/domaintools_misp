@@ -1,2 +1,3 @@
 include *.in *.ini *.txt
+recursive-include install *.py
 graft tests
