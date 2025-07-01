@@ -73,9 +73,7 @@ class dt_module_helpers:
             return "{age} years".format(age=round(age / (60 * 60 * 24 * 365), 1))
 
     def calculate_age(self, born):
-        return self.format_age(
-            time.time() - time.mktime(parser.parse(born).timetuple())
-        )
+        return self.format_age(time.time() - time.mktime(parser.parse(born).timetuple()))
 
     def safe_path(self, src, path):
         self.safe_path_result = None
@@ -172,9 +170,7 @@ class dt_module_helpers:
                             self.safe_get_result,
                             _types,
                             _comment.format(_what.replace("_", " ") + " -> {0}"),
-                            self.append_unique_value(
-                                _tags_local, _what.replace("_", " ")
-                            ),
+                            self.append_unique_value(_tags_local, _what.replace("_", " ")),
                             _label.format(_what.replace("_", " ") + " -> {0}"),
                             _categories,
                         )
@@ -186,9 +182,7 @@ class dt_module_helpers:
                             item,
                             _types,
                             _comment.format(_what.replace("_", " ") + " -> {0}"),
-                            self.append_unique_value(
-                                _tags_local, _what.replace("_", " ")
-                            ),
+                            self.append_unique_value(_tags_local, _what.replace("_", " ")),
                             _label.format(_what.replace("_", " ") + " -> {0}"),
                             _categories,
                         )
@@ -198,11 +192,7 @@ class dt_module_helpers:
                     self.append_unique_payload(
                         {
                             "types": _types,
-                            "values": {
-                                _label.format(
-                                    _what.replace("_", " ")
-                                ): self.safe_get_result
-                            },
+                            "values": {_label.format(_what.replace("_", " ")): self.safe_get_result},
                             "comment": _comment.format(_what.replace("_", " ")),
                             "tags": _tags,
                             "categories": _categories,
@@ -245,9 +235,7 @@ class dt_module_helpers:
         if count and count < threshold:
             tags.append("Guided Pivot")
 
-        self.simple_parse(
-            "value", item, type, comment, tags, label, _categories=categories
-        )
+        self.simple_parse("value", item, type, comment, tags, label, _categories=categories)
 
     def iris_address(self, item, label):
 
@@ -291,6 +279,9 @@ class dt_module_helpers:
                 self.iris_add(email, ["text"], "{0} Email".format(label))
 
     def extract_nested_value(self, value, label):
+        if not value:
+            return
+
         if type(value) is list:
             for item in value:
                 self.extract_nested_value(item, label)
@@ -299,23 +290,17 @@ class dt_module_helpers:
         if type(value) is not dict:
             return
 
-        if (
-            "count" in value
-            and value["count"] > GUIDED_PIVOT_COUNT_MIN
-            and value["count"] <= GUIDED_PIVOT_COUNT_MAX
-        ):
+        if "count" in value and value["count"] > GUIDED_PIVOT_COUNT_MIN and value["count"] <= GUIDED_PIVOT_COUNT_MAX:
             self.append_unique_payload(
                 {
                     "types": [ATTRIBUTE_TYPES_MAP.get(label, "text")],
                     "categories": ["External analysis"],
-                    "values": {
-                        "Guided Pivot": f"{label} (~{value['count']} domains share this value.)"
-                    },
+                    "values": {"Guided Pivot": f"{label} (~{value['count']} domains share this value.)"},
                     "comment": "Guided Pivot",
                     "tags": ["DomainTools", "Guided Pivot"],
                 }
             )
-        elif value and "count" not in value:
+        elif value:
             self.append_unique_payload(
                 {
                     "types": [ATTRIBUTE_TYPES_MAP.get(label, "text")],
@@ -330,9 +315,7 @@ class dt_module_helpers:
         for key, value in iris_property.items():
             self.extract_nested_value(value, f"{label} {key}")
 
-    def is_valid_datetime(
-        self, datetime_str, whitelist=("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S+00:00")
-    ):
+    def is_valid_datetime(self, datetime_str, whitelist=("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S+00:00")):
         for fmt in whitelist:
             try:
                 datetime.strptime(datetime_str, fmt)
@@ -391,9 +374,7 @@ class dt_misp_module_base:
         self.log.setLevel(logging.DEBUG)
         self.ch = logging.StreamHandler(sys.stdout)
         self.ch.setLevel(logging.DEBUG)
-        self.formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
+        self.formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         self.ch.setFormatter(self.formatter)
         self.log.addHandler(self.ch)
 
@@ -412,16 +393,10 @@ class dt_misp_module_base:
             self.errors["error"] = "DomainTools API key is not configured."
             return False
 
-        if (
-            self.helper.module_has_type("expansion")
-            and self.config.get("results_limit", None) is None
-        ):
+        if self.helper.module_has_type("expansion") and self.config.get("results_limit", None) is None:
             self.config["results_limit"] = self.results_limit
 
-        if (
-            self.helper.module_has_type("expansion")
-            and self.config.get("guided_pivot_threshold", "") == ""
-        ):
+        if self.helper.module_has_type("expansion") and self.config.get("guided_pivot_threshold", "") == "":
             self.config["guided_pivot_threshold"] = self.guided_pivot_threshold
 
         self.api = dt_api_adapter_misp(self)
@@ -508,9 +483,7 @@ class dt_misp_module_base:
                                 svc(request[type], type)
                             except Exception as e:
                                 # Catchall exception for code simplication. We're still logging the specific exception name for debugging purposes.
-                                self.log.debug(
-                                    f"API returned a {e.__class__.__name__} response for {request[type]}."
-                                )
+                                self.log.debug(f"API returned a {e.__class__.__name__} response for {request[type]}.")
                                 self.errors["error"] = str(e)
                                 pass
                         break  # can there realistically be more than one type in a request?
@@ -544,22 +517,15 @@ class dt_api_adapter_misp:
 
         for svc in self.account_information["response"]["products"]:
             if svc["per_month_limit"] is not None:
-                self.svc_enabled[svc["id"]] = int(svc["per_month_limit"]) - int(
-                    svc["usage"]["month"]
-                )
+                self.svc_enabled[svc["id"]] = int(svc["per_month_limit"]) - int(svc["usage"]["month"])
 
             else:
                 self.svc_enabled[svc["id"]] = True
 
     def parsed_whois(self, query, query_type):
-        if (
-            "parsed-whois" not in self.svc_enabled
-            or self.svc_enabled["parsed-whois"] <= 0
-        ):
+        if "parsed-whois" not in self.svc_enabled or self.svc_enabled["parsed-whois"] <= 0:
             if self.plugin.debug:
-                self.plugin.log.debug(
-                    "parsed-whois: service disabled or over monthly limit"
-                )
+                self.plugin.log.debug("parsed-whois: service disabled or over monthly limit")
 
         if self.plugin.module["name"] == "DomainTools-Historic":
             return True
@@ -584,33 +550,21 @@ class dt_api_adapter_misp:
             if self.helper.module_has_type("expansion"):
                 if self.helper.safe_get(results, "contacts"):
                     for contact in self.helper.safe_get_result:
-                        self.helper.simple_parse(
-                            "abuse_mailbox", contact, ["email-src", "email-dst"]
-                        )
+                        self.helper.simple_parse("abuse_mailbox", contact, ["email-src", "email-dst"])
                         self.helper.simple_parse("address", contact)
                         self.helper.simple_parse("changed_by", contact)
                         self.helper.simple_parse("descr", contact)
-                        self.helper.simple_parse(
-                            "fax", contact, ["whois-registrant-phone"]
-                        )
-                        self.helper.simple_parse(
-                            "notify_email", contact, ["whois-registrant-email"]
-                        )
-                        self.helper.simple_parse(
-                            "phone", contact, ["whois-registrant-phone"]
-                        )
+                        self.helper.simple_parse("fax", contact, ["whois-registrant-phone"])
+                        self.helper.simple_parse("notify_email", contact, ["whois-registrant-email"])
+                        self.helper.simple_parse("phone", contact, ["whois-registrant-phone"])
                         self.helper.simple_parse("remarks", contact)
                         self.helper.simple_parse("contact_keys", contact)
                         self.helper.simple_parse("mnt_keys", contact)
                         self.helper.simple_parse("other", contact)
                         self.helper.simple_parse("country", contact)
-                        self.helper.simple_parse(
-                            "created_date", contact, ["whois-creation-date"]
-                        )
+                        self.helper.simple_parse("created_date", contact, ["whois-creation-date"])
                         self.helper.simple_parse("id", contact)
-                        self.helper.simple_parse(
-                            "name", contact, ["whois-registrant-name"]
-                        )
+                        self.helper.simple_parse("name", contact, ["whois-registrant-name"])
                         self.helper.simple_parse("ref", contact, ["url", "uri"])
                         self.helper.simple_parse("source", contact)
                         self.helper.simple_parse("type", contact)
@@ -621,27 +575,19 @@ class dt_api_adapter_misp:
                         self.helper.simple_parse("changed_by", network)
                         self.helper.simple_parse("contact_keys", network)
                         self.helper.simple_parse("country", network)
-                        self.helper.simple_parse(
-                            "created_date", network, ["whois-creation-date"]
-                        )
+                        self.helper.simple_parse("created_date", network, ["whois-creation-date"])
                         self.helper.simple_parse("customer", network)
                         self.helper.simple_parse("descr", network)
                         self.helper.simple_parse("id", network)
                         self.helper.simple_parse("mnt_keys", network)
-                        self.helper.simple_parse(
-                            "name", network, ["whois-registrant-name"]
-                        )
-                        self.helper.simple_parse(
-                            "notify_email", network, ["whois-registrant-email"]
-                        )
+                        self.helper.simple_parse("name", network, ["whois-registrant-name"])
+                        self.helper.simple_parse("notify_email", network, ["whois-registrant-email"])
                         self.helper.simple_parse("org", network)
                         self.helper.simple_parse("other", network)
                         self.helper.simple_parse("parent", network)
                         self.helper.simple_parse("parent_id", network)
                         self.helper.simple_parse("parent_id", network)
-                        self.helper.simple_parse(
-                            "phone", network, ["whois-registrant-phone"]
-                        )
+                        self.helper.simple_parse("phone", network, ["whois-registrant-phone"])
                         self.helper.simple_parse("range", network)
                         self.helper.simple_parse("ref", contact)
                         self.helper.simple_parse("remarks", contact)
@@ -687,10 +633,7 @@ class dt_api_adapter_misp:
 
             self.helper.simple_parse("registrar", results, ["whois-registrar"])
             self.helper.simple_parse("created_date", results, ["whois-creation-date"])
-            if (
-                self.helper.safe_get(results, "created_date")
-                and self.helper.safe_get_result != ""
-            ):
+            if self.helper.safe_get(results, "created_date") and self.helper.safe_get_result != "":
                 age = self.helper.calculate_age(self.helper.safe_get_result)
                 self.helper.append_unique_payload(
                     {
@@ -719,10 +662,7 @@ class dt_api_adapter_misp:
         results = results["response"]
         if method._status != 200:
             return True
-        if (
-            self.helper.safe_path(results, ["whois", "registrant"])
-            and self.helper.safe_path_result != ""
-        ):
+        if self.helper.safe_path(results, ["whois", "registrant"]) and self.helper.safe_path_result != "":
             self.helper.append_unique_payload(
                 {
                     "types": ["whois-registrant-name"],
@@ -732,10 +672,7 @@ class dt_api_adapter_misp:
                 }
             )
 
-        if (
-            self.helper.safe_path(results, ["whois", "registration", "created"])
-            and self.helper.safe_path_result != ""
-        ):
+        if self.helper.safe_path(results, ["whois", "registration", "created"]) and self.helper.safe_path_result != "":
             self.helper.append_unique_payload(
                 {
                     "types": ["whois-creation-date"],
@@ -748,14 +685,9 @@ class dt_api_adapter_misp:
         return True
 
     def domain_profile(self, query, query_type):
-        if (
-            "domain-profile" not in self.svc_enabled
-            or self.svc_enabled["domain-profile"] <= 0
-        ):
+        if "domain-profile" not in self.svc_enabled or self.svc_enabled["domain-profile"] <= 0:
             if self.plugin.debug:
-                self.plugin.log.debug(
-                    "domain-profile: service disabled or over monthly limit"
-                )
+                self.plugin.log.debug("domain-profile: service disabled or over monthly limit")
 
         if self.plugin.module["name"] == "DomainTools-Historic":
             return True
@@ -779,10 +711,7 @@ class dt_api_adapter_misp:
             self.plugin.errors["error"] = results["error"]["message"]
             return False
 
-        if (
-            self.helper.safe_path(results, ["server", "ip_address"])
-            and self.helper.safe_path_result != ""
-        ):
+        if self.helper.safe_path(results, ["server", "ip_address"]) and self.helper.safe_path_result != "":
             self.helper.append_unique_payload(
                 {
                     "types": ["ip-src", "ip-dst"],
@@ -791,10 +720,7 @@ class dt_api_adapter_misp:
                     "tags": ["DomainTools", "whois", "domain ip address"],
                 }
             )
-        if (
-            self.helper.safe_path(results, ["registrant", "name"])
-            and self.helper.safe_path_result != ""
-        ):
+        if self.helper.safe_path(results, ["registrant", "name"]) and self.helper.safe_path_result != "":
             self.helper.append_unique_payload(
                 {
                     "types": ["whois-registrant-name"],
@@ -803,10 +729,7 @@ class dt_api_adapter_misp:
                     "tags": ["DomainTools", "whois", "registrant name"],
                 }
             )
-        if (
-            self.helper.safe_path(results, ["registrant", "email"])
-            and self.helper.safe_path_result != ""
-        ):
+        if self.helper.safe_path(results, ["registrant", "email"]) and self.helper.safe_path_result != "":
             self.helper.append_unique_payload(
                 {
                     "types": ["whois-registrant-email"],
@@ -815,36 +738,22 @@ class dt_api_adapter_misp:
                     "tags": ["DomainTools", "whois", "registrant email"],
                 }
             )
-        if (
-            self.helper.safe_path(results, ["registrant", "domains"])
-            and self.helper.safe_path_result != ""
-        ):
+        if self.helper.safe_path(results, ["registrant", "domains"]) and self.helper.safe_path_result != "":
             self.helper.append_unique_payload(
                 {
                     "types": ["text"],
                     "categories": ["External analysis"],
-                    "values": {
-                        "registrant domain count": "registrant has {count} other domains".format(
-                            count=self.helper.safe_path_result
-                        )
-                    },
+                    "values": {"registrant domain count": "registrant has {count} other domains".format(count=self.helper.safe_path_result)},
                     "comment": "registrant domain count from DomainTools",
                     "tags": ["DomainTools", "whois", "registrant domain count"],
                 }
             )
-        if (
-            self.helper.safe_path(results, ["server", "other_domains"])
-            and self.helper.safe_path_result != ""
-        ):
+        if self.helper.safe_path(results, ["server", "other_domains"]) and self.helper.safe_path_result != "":
             self.helper.append_unique_payload(
                 {
                     "types": ["text"],
                     "categories": ["External analysis"],
-                    "values": {
-                        "co-located domain count": "IP is shared with {count} other domains".format(
-                            count=self.helper.safe_path_result
-                        )
-                    },
+                    "values": {"co-located domain count": "IP is shared with {count} other domains".format(count=self.helper.safe_path_result)},
                     "comment": "co-located domain count from DomainTools",
                     "tags": ["DomainTools", "co-located domain count"],
                 }
@@ -860,10 +769,7 @@ class dt_api_adapter_misp:
                             "tags": ["DomainTools", "whois", "nameserver"],
                         }
                     )
-        if (
-            self.helper.safe_path(results, ["registration", "created"])
-            and self.helper.safe_path_result != ""
-        ):
+        if self.helper.safe_path(results, ["registration", "created"]) and self.helper.safe_path_result != "":
             self.helper.append_unique_payload(
                 {
                     "types": ["whois-creation-date"],
@@ -872,10 +778,7 @@ class dt_api_adapter_misp:
                     "tags": ["DomainTools", "whois", "creation date"],
                 }
             )
-        if (
-            self.helper.safe_path(results, ["registration", "registrar"])
-            and self.helper.safe_path_result != ""
-        ):
+        if self.helper.safe_path(results, ["registration", "registrar"]) and self.helper.safe_path_result != "":
             self.helper.append_unique_payload(
                 {
                     "types": ["whois-registrar"],
@@ -936,9 +839,7 @@ class dt_api_adapter_misp:
     def reverse_ip(self, query, query_type):
         if "reverse-ip" not in self.svc_enabled or self.svc_enabled["reverse-ip"] <= 0:
             if self.plugin.debug:
-                self.plugin.log.debug(
-                    "reverse-ip: service disabled or over monthly limit"
-                )
+                self.plugin.log.debug("reverse-ip: service disabled or over monthly limit")
 
         if self.plugin.module["name"] == "DomainTools-Historic":
             return True
@@ -976,9 +877,7 @@ class dt_api_adapter_misp:
                                 "types": ["text"],
                                 "categories": ["External analysis"],
                                 "values": {
-                                    "co-located domain count": "{0} is shared with {count} other domains".format(
-                                        q, item["domain_count"]
-                                    )
+                                    "co-located domain count": "{0} is shared with {count} other domains".format(q, item["domain_count"])
                                 },
                                 "comment": "co-located domain count from DomainTools",
                                 "tags": ["DomainTools", "co-located domain count"],
@@ -1042,14 +941,9 @@ class dt_api_adapter_misp:
         return True
 
     def reverse_whois(self, query, query_type):
-        if (
-            "reverse-whois" not in self.svc_enabled
-            or self.svc_enabled["reverse-whois"] <= 0
-        ):
+        if "reverse-whois" not in self.svc_enabled or self.svc_enabled["reverse-whois"] <= 0:
             if self.plugin.debug:
-                self.plugin.log.debug(
-                    "reverse-whois: service disabled or over monthly limit"
-                )
+                self.plugin.log.debug("reverse-whois: service disabled or over monthly limit")
 
         if self.plugin.module["name"] == "DomainTools-Historic":
             return True
@@ -1089,11 +983,7 @@ class dt_api_adapter_misp:
                     {
                         "types": ["text"],
                         "categories": ["External analysis"],
-                        "values": {
-                            "current domain count": self.helper.safe_get_result[
-                                "current"
-                            ]
-                        },
+                        "values": {"current domain count": self.helper.safe_get_result["current"]},
                         "comment": "domain count current from DomainTools",
                         "tags": ["DomainTools", "reverse whois domain"],
                     }
@@ -1103,11 +993,7 @@ class dt_api_adapter_misp:
                     {
                         "types": ["text"],
                         "categories": ["External analysis"],
-                        "values": {
-                            "historic domain count": self.helper.safe_get_result[
-                                "historic"
-                            ]
-                        },
+                        "values": {"historic domain count": self.helper.safe_get_result["historic"]},
                         "comment": "historic domain count from DomainTools",
                         "tags": ["DomainTools", "reverse whois"],
                     }
@@ -1117,9 +1003,7 @@ class dt_api_adapter_misp:
     def host_domains(self, query, query_type):
         if "reverse-ip" not in self.svc_enabled or self.svc_enabled["reverse-ip"] <= 0:
             if self.plugin.debug:
-                self.plugin.log.debug(
-                    "reverse-ip: service disabled or over monthly limit"
-                )
+                self.plugin.log.debug("reverse-ip: service disabled or over monthly limit")
 
         if self.plugin.module["name"] == "DomainTools-Historic":
             return True
@@ -1148,11 +1032,7 @@ class dt_api_adapter_misp:
                     {
                         "types": ["text"],
                         "categories": ["External analysis"],
-                        "values": {
-                            "co-located domain count": self.helper.safe_get_result[
-                                "domain_count"
-                            ]
-                        },
+                        "values": {"co-located domain count": self.helper.safe_get_result["domain_count"]},
                         "comment": "co-located domain count from DomainTools",
                         "tags": ["DomainTools", "co-located domain count"],
                     }
@@ -1176,14 +1056,9 @@ class dt_api_adapter_misp:
         return True
 
     def hosting_history(self, query, query_type):
-        if (
-            "hosting-history" not in self.svc_enabled
-            or self.svc_enabled["hosting-history"] <= 0
-        ):
+        if "hosting-history" not in self.svc_enabled or self.svc_enabled["hosting-history"] <= 0:
             if self.plugin.debug:
-                self.plugin.log.debug(
-                    "hosting-history: service disabled or over monthly limit"
-                )
+                self.plugin.log.debug("hosting-history: service disabled or over monthly limit")
 
         if self.plugin.module["name"] != "DomainTools-Historic":
             return True
@@ -1275,9 +1150,7 @@ class dt_api_adapter_misp:
                         {
                             "types": ["whois-registrar"],
                             "values": {"registrar": item["registrar"]},
-                            "comment": "record date: {0}".format(
-                                item["date_lastchecked"]
-                            ),
+                            "comment": "record date: {0}".format(item["date_lastchecked"]),
                             "tags": [
                                 "DomainTools",
                                 "hosting history",
@@ -1289,14 +1162,9 @@ class dt_api_adapter_misp:
         return True
 
     def whois_history(self, query, query_type):
-        if (
-            "whois-history" not in self.svc_enabled
-            or self.svc_enabled["whois-history"] <= 0
-        ):
+        if "whois-history" not in self.svc_enabled or self.svc_enabled["whois-history"] <= 0:
             if self.plugin.debug:
-                self.plugin.log.debug(
-                    "whois-history: service disabled or over monthly limit"
-                )
+                self.plugin.log.debug("whois-history: service disabled or over monthly limit")
 
         if self.plugin.module["name"] != "DomainTools-Historic":
             return True
@@ -1356,9 +1224,7 @@ class dt_api_adapter_misp:
 
         if service not in self.svc_enabled or self.svc_enabled[service] <= 0:
             if self.plugin.debug:
-                self.plugin.log.debug(
-                    "{0}: service disabled or over monthly limit".format(service)
-                )
+                self.plugin.log.debug("{0}: service disabled or over monthly limit".format(service))
 
         results = method.data()
         results = results["response"]
@@ -1375,10 +1241,7 @@ class dt_api_adapter_misp:
 
         result = self.helper.safe_get_result.pop()
 
-        if (
-            self.helper.safe_path(result, ["create_date", "value"])
-            and self.helper.safe_path_result != ""
-        ):
+        if self.helper.safe_path(result, ["create_date", "value"]) and self.helper.safe_path_result != "":
             create_date = self.helper.safe_path_result
             age = self.helper.calculate_age(create_date)
             self.helper.append_unique_payload(
@@ -1400,18 +1263,13 @@ class dt_api_adapter_misp:
                 }
             )
 
-        if (
-            self.helper.safe_path(result, ["expiration_date", "value"])
-            and self.helper.safe_path_result != ""
-        ):
+        if self.helper.safe_path(result, ["expiration_date", "value"]) and self.helper.safe_path_result != "":
             expiration_date = self.helper.safe_path_result
             self.helper.append_unique_payload(
                 {
                     "types": ["datetime"],
                     "categories": ["External analysis"],
-                    "values": {
-                        "Expiration Date": "{0} 00:00:00".format(expiration_date)
-                    },
+                    "values": {"Expiration Date": "{0} 00:00:00".format(expiration_date)},
                     "comment": "Expiration Date from DomainTools",
                     "tags": ["DomainTools", "Expiration Date"],
                 }
@@ -1474,9 +1332,7 @@ class dt_api_adapter_misp:
                     {
                         "types": ["text"],
                         "categories": ["External analysis"],
-                        "values": {
-                            "Risk Score Component": f"{component['name']} ({component['risk_score']})"
-                        },
+                        "values": {"Risk Score Component": f"{component['name']} ({component['risk_score']})"},
                         "comment": "Risk Score Component from DomainTools",
                         "tags": ["DomainTools", "Iris"],
                     }
@@ -1494,11 +1350,7 @@ class dt_api_adapter_misp:
                     {
                         "types": ["text"],
                         "categories": ["External analysis"],
-                        "values": {
-                            "Risk Score Component Threats": ", ".join(
-                                sorted(risk_score_threats)
-                            )
-                        },
+                        "values": {"Risk Score Component Threats": ", ".join(sorted(risk_score_threats))},
                         "comment": "Risk Score Threats from DomainTools",
                         "tags": ["DomainTools", "Iris"],
                     }
@@ -1509,11 +1361,7 @@ class dt_api_adapter_misp:
                     {
                         "types": ["text"],
                         "categories": ["External analysis"],
-                        "values": {
-                            "Risk Score Component Evidence": ", ".join(
-                                sorted(risk_score_evidence)
-                            )
-                        },
+                        "values": {"Risk Score Component Evidence": ", ".join(sorted(risk_score_evidence))},
                         "comment": "Risk Score Evidence from DomainTools",
                         "tags": ["DomainTools", "Iris"],
                     }
@@ -1580,13 +1428,11 @@ class dt_api_adapter_misp:
                     )
 
             if self.helper.safe_get(result, "name_server"):
-                for index, name_server in zip(
-                    range(len(self.helper.safe_get_result)), self.helper.safe_get_result
-                ):
+                for index, name_server in zip(range(len(self.helper.safe_get_result)), self.helper.safe_get_result):
                     self.helper.simple_parse(
                         "value",
                         name_server["host"],
-                        ["host"],
+                        ["hostname"],
                         "Name Server from DomainTools",
                         ["DomainTools", "Iris"],
                         "Name Server",
@@ -1604,44 +1450,28 @@ class dt_api_adapter_misp:
                     )
 
             if self.helper.safe_get(result, "create_date"):
-                self.helper.extract_nested_value(
-                    self.helper.safe_get_result, "create date"
-                )
+                self.helper.extract_nested_value(self.helper.safe_get_result, "create date")
 
         # For Iris-Investigate Guided Pivots, we get the count only
         # For Iris-Enrich we get the values only
         if self.helper.safe_get(result, "technical_contact"):
-            self.helper.get_count_or_value(
-                self.helper.safe_get_result, "technical contact"
-            )
+            self.helper.get_count_or_value(self.helper.safe_get_result, "technical contact")
         if self.helper.safe_get(result, "admin_contact"):
             self.helper.get_count_or_value(self.helper.safe_get_result, "admin contact")
         if self.helper.safe_get(result, "billing_contact"):
-            self.helper.get_count_or_value(
-                self.helper.safe_get_result, "billing contact"
-            )
+            self.helper.get_count_or_value(self.helper.safe_get_result, "billing contact")
         if self.helper.safe_get(result, "redirect_domain"):
-            self.helper.extract_nested_value(
-                self.helper.safe_get_result, "redirect domain"
-            )
+            self.helper.extract_nested_value(self.helper.safe_get_result, "redirect domain")
         if self.helper.safe_get(result, "registrar"):
             self.helper.extract_nested_value(self.helper.safe_get_result, "registrar")
         if self.helper.safe_get(result, "google_analytics"):
-            self.helper.extract_nested_value(
-                self.helper.safe_get_result, "google analytics"
-            )
+            self.helper.extract_nested_value(self.helper.safe_get_result, "google analytics")
         if self.helper.safe_get(result, "registrant_contact"):
-            self.helper.get_count_or_value(
-                self.helper.safe_get_result, "registrant contact"
-            )
+            self.helper.get_count_or_value(self.helper.safe_get_result, "registrant contact")
         if self.helper.safe_get(result, "registrant_org"):
-            self.helper.get_count_or_value(
-                self.helper.safe_get_result, "registrant organization"
-            )
+            self.helper.get_count_or_value(self.helper.safe_get_result, "registrant organization")
         if self.helper.safe_get(result, "registrant_name"):
-            self.helper.get_count_or_value(
-                self.helper.safe_get_result, "registrant name"
-            )
+            self.helper.get_count_or_value(self.helper.safe_get_result, "registrant name")
         if self.helper.safe_get(result, "ip"):
             for ip in self.helper.safe_get_result:
                 self.helper.get_count_or_value(ip, "ip")
@@ -1662,14 +1492,9 @@ class dt_api_adapter_misp:
         return True
 
     def iris_pivot(self, query, query_type):
-        if (
-            "iris-investigate" not in self.svc_enabled
-            or self.svc_enabled["iris-investigate"] <= 0
-        ):
+        if "iris-investigate" not in self.svc_enabled or self.svc_enabled["iris-investigate"] <= 0:
             if self.plugin.debug:
-                self.plugin.log.debug(
-                    "iris-investigate: service disabled or over monthly limit"
-                )
+                self.plugin.log.debug("iris-investigate: service disabled or over monthly limit")
 
         if self.plugin.module["name"] != "DomainTools-Iris-Pivot":
             return True
@@ -1772,13 +1597,9 @@ class dt_api_adapter_misp:
                 categories=["Attribution"],
             )
         if self.helper.safe_get(result, "expiration_date"):
-            self.helper.iris_add(
-                self.helper.safe_get_result, ["text"], "Expiration Date"
-            )
+            self.helper.iris_add(self.helper.safe_get_result, ["text"], "Expiration Date")
         if self.helper.safe_get(result, "redirect_domain"):
-            self.helper.iris_add(
-                self.helper.safe_get_result, ["domain"], "Redirect Domain"
-            )
+            self.helper.iris_add(self.helper.safe_get_result, ["domain"], "Redirect Domain")
         if self.helper.safe_get(result, "registrar"):
             self.helper.iris_add(
                 self.helper.safe_get_result,
@@ -1824,12 +1645,8 @@ class dt_api_adapter_misp:
 
         if self.helper.safe_get(result, "name_server"):
             for name_server in self.helper.safe_get_result:
-                self.helper.iris_add(
-                    name_server["host"], ["hostname"], "Name Server Host"
-                )
-                self.helper.iris_add(
-                    name_server["domain"], ["domain"], "Name Server Domain"
-                )
+                self.helper.iris_add(name_server["host"], ["hostname"], "Name Server Host")
+                self.helper.iris_add(name_server["domain"], ["domain"], "Name Server Domain")
 
                 for ip in name_server["ip"]:
                     self.helper.iris_add(ip, ["ip-src"], "Name Server IP")
@@ -1844,9 +1661,7 @@ class dt_api_adapter_misp:
 
         if self.helper.safe_get(result, "soa_email"):
             for soa in self.helper.safe_get_result:
-                self.helper.iris_add(
-                    soa, ["email-dst"], "SOA email", categories=["Network activity"]
-                )
+                self.helper.iris_add(soa, ["email-dst"], "SOA email", categories=["Network activity"])
 
         if self.helper.safe_get(result, "additional_whois_email"):
             for email in self.helper.safe_get_result:
@@ -1873,28 +1688,17 @@ class dt_api_adapter_misp:
                         "types": ["text"],
                         "categories": ["External analysis"],
                         "values": {
-                            "{0} Risk Component".format(
-                                component["name"]
-                            ): "{0}".format(
-                                component["risk_score"], component["risk_score"]
-                            )
+                            "{0} Risk Component".format(component["name"]): "{0}".format(component["risk_score"], component["risk_score"])
                         },
-                        "comment": "{0} Risk Component from DomainTools".format(
-                            component["name"]
-                        ),
+                        "comment": "{0} Risk Component from DomainTools".format(component["name"]),
                         "tags": ["DomainTools", "Iris"],
                     }
                 )
 
     def iris_import(self, query, query_type):
-        if (
-            "iris-import" not in self.svc_enabled
-            or self.svc_enabled["iris-import"] <= 0
-        ):
+        if "iris-import" not in self.svc_enabled or self.svc_enabled["iris-import"] <= 0:
             if self.plugin.debug:
-                self.plugin.log.debug(
-                    "iris-import: service disabled or over monthly limit"
-                )
+                self.plugin.log.debug("iris-import: service disabled or over monthly limit")
 
         if self.plugin.module["name"] != "DomainTools-Iris-Import":
             return True
@@ -1905,9 +1709,7 @@ class dt_api_adapter_misp:
         STRINGIFIED_BASE64_SEARCH_HASH_END_INDEX = -1
 
         stringified_search_hash = (
-            str(base64.b64decode(query))[
-                STRINGIFIED_BASE64_SEARCH_HASH_START_INDEX:STRINGIFIED_BASE64_SEARCH_HASH_END_INDEX
-            ]
+            str(base64.b64decode(query))[STRINGIFIED_BASE64_SEARCH_HASH_START_INDEX:STRINGIFIED_BASE64_SEARCH_HASH_END_INDEX]
             if query and query != ""
             else ""
         )
@@ -1947,24 +1749,15 @@ class dt_api_adapter_misp:
         return True
 
     def iris_detect(self, query, query_type):
-        if (
-            "iris-detect" not in self.svc_enabled
-            or self.svc_enabled["iris-detect"] <= 0
-        ):
+        if "iris-detect" not in self.svc_enabled or self.svc_enabled["iris-detect"] <= 0:
             if self.plugin.debug:
-                self.plugin.log.debug(
-                    "iris-detect: service disabled or over monthly limit"
-                )
+                self.plugin.log.debug("iris-detect: service disabled or over monthly limit")
 
         if self.plugin.module["name"] != "DomainTools-Iris-Detect":
             return True
 
         api_endpoint = self.plugin.config.get("api_endpoint")
-        monitor_id = (
-            None
-            if self.plugin.config.get("monitor_id") == ""
-            else self.plugin.config.get("monitor_id")
-        )
+        monitor_id = None if self.plugin.config.get("monitor_id") == "" else self.plugin.config.get("monitor_id")
         discovered_date = self.plugin.config.get("discovered_date")
         changed_since = self.plugin.config.get("changed_since")
         escalated_since = self.plugin.config.get("escalated_since")
@@ -1974,9 +1767,7 @@ class dt_api_adapter_misp:
         preview = self.plugin.config.get("test_mode")
         include_domain_data = self.plugin.config.get("include_domain_data")
         none_or_empty = ("None", "")
-        incorrect_date_format_error = (
-            "Incorrect data format, should be YYYY-MM-DD or YYYY-MM-DDThh:mm:ss+00:00"
-        )
+        incorrect_date_format_error = "Incorrect data format, should be YYYY-MM-DD or YYYY-MM-DDThh:mm:ss+00:00"
 
         if discovered_date in none_or_empty:
             discovered_date = None
@@ -2086,9 +1877,7 @@ class dt_api_adapter_misp:
         # Perform domains marking for 'new' api_endpoint
         if tag_domains_as_blocked == "1" and api_endpoint == "0":
             try:
-                result = self.api.iris_detect_escalate_domains(
-                    domain_id_list, "blocked"
-                )
+                result = self.api.iris_detect_escalate_domains(domain_id_list, "blocked")
                 if result.status == 200:
                     self.plugin.log.debug(f"Done blocking domains: {domain_id_list}")
                 else:
