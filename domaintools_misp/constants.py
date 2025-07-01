@@ -2,13 +2,13 @@ GUIDED_PIVOT_COUNT_MIN = 1
 GUIDED_PIVOT_COUNT_MAX = 500
 
 ATTRIBUTE_TYPES_MAP = {
-    "email domain": "host",
+    "email domain": "hostname",
     "ip address": "ip-dst",
-    "mx host": "host",
-    "mx domain": "host",
+    "mx host": "hostname",
+    "mx domain": "hostname",
     "mx ip": "ip-dst",
-    "name server host": "host",
-    "name server domain": "host",
+    "name server host": "hostname",
+    "name server domain": "hostname",
     "name server ip": "ip-dst",
 }
 

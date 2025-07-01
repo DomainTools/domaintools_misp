@@ -108,3 +108,20 @@ class TestIrisEnrich:
 
             # Reset attribute assertion basis
             is_attribute_exists = False
+
+    def test_iris_enrich_type_host_should_be_changed_to_hostname_for_specific_attributes(self):
+        assert "results" in self.dtmm_iris_enrich_resp
+        assert len(self.dtmm_iris_enrich_resp["results"]) > 0
+
+        for attribute in [
+            "Name Server Host",
+            "Name Server Domain",
+            "Mx Host",
+            "Mx Domain",
+            "Email Domain",
+        ]:
+            for data in self.dtmm_iris_enrich_resp["results"]:
+                if attribute in data["values"]:
+                    assert data["types"] == ["hostname"]
+
+                assert data["types"] != ["host"]
