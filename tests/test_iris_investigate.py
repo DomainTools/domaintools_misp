@@ -30,10 +30,10 @@ class TestIrisInvestigate:
         dtmm_iris_investigate = dt_misp_module_iris_investigate()
         assert dtmm_iris_investigate.introspection() is not None
 
-    def test_iris_investigate_has_version(self):
+    def test_iris_investigate_has_version(self, version):
         dtmm_iris_investigate = dt_misp_module_iris_investigate()
         expected_version = {
-            "version": "2.0",
+            "version": version,
             "author": "DomainTools, LLC",
             "description": """
                 Designed for MISP tooltip or hover actions on domain names.
@@ -41,7 +41,7 @@ class TestIrisInvestigate:
                 Guided Pivot counts help investigators identify connected attributes to other domain infrastructure.
                 Requires Iris Investigate account provisioning.
                 """,
-            "module-type": ["hover"],
+            "module-type": ["expansion", "hover"],
             "config": ["username", "api_key", "results_limit"],
         }
 

@@ -2,6 +2,8 @@ import pytest
 import logging
 import os
 
+from domaintools_misp._version import current
+
 
 @pytest.fixture
 def logger():
@@ -22,3 +24,8 @@ def query_parameters():
     }
 
     return q
+
+
+@pytest.fixture
+def version():
+    return current

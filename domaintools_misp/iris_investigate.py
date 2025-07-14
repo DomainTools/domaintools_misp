@@ -1,10 +1,11 @@
 from domaintools_misp import base
+from domaintools_misp._version import current as version
 
 
 class dt_misp_module_iris_investigate(base.dt_misp_module_base):
     def __init__(self, debug=False):
         self.module_info = {
-            "version": "2.0",
+            "version": version,
             "author": "DomainTools, LLC",
             "description": """
                 Designed for MISP tooltip or hover actions on domain names.
@@ -12,7 +13,7 @@ class dt_misp_module_iris_investigate(base.dt_misp_module_base):
                 Guided Pivot counts help investigators identify connected attributes to other domain infrastructure.
                 Requires Iris Investigate account provisioning.
                 """,
-            "module-type": ["hover"],
+            "module-type": ["expansion", "hover"],
         }
         self.module = {"name": "DomainTools-Iris-Investigate"}
         base.dt_misp_module_base.__init__(self)

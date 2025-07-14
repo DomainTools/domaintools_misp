@@ -1,11 +1,12 @@
 from domaintools_misp import base
 from domaintools_misp.config import IRIS_DETECT_USER_CONFIG
+from domaintools_misp._version import current as version
 
 
 class dt_misp_module_iris_detect(base.dt_misp_module_base):
     def __init__(self, debug=False):
         self.module_info = {
-            "version": "2.0",
+            "version": version,
             "author": "DomainTools, LLC",
             "description": """
                 Imports newly discovered and/or newly changed domains from DomainTools Iris Detect product.

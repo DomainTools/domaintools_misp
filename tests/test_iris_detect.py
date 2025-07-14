@@ -44,10 +44,10 @@ class TestIrisDetect:
         dtmm_iris_detect = dt_misp_module_iris_detect()
         assert dtmm_iris_detect.introspection() is not None
 
-    def test_iris_detect_has_version(self):
+    def test_iris_detect_has_version(self, version):
         dtmm_iris_detect = dt_misp_module_iris_detect()
         expected_version = {
-            "version": "2.0",
+            "version": version,
             "author": "DomainTools, LLC",
             "description": """
                 Imports newly discovered and/or newly changed domains from DomainTools Iris Detect product.

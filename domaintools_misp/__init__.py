@@ -6,6 +6,9 @@ from domaintools_misp.iris_investigate import dt_misp_module_iris_investigate
 from domaintools_misp.iris_pivot import dt_misp_module_iris_pivot
 from domaintools_misp.pivot import dt_misp_module_pivot
 from domaintools_misp.historic import dt_misp_module_historic
+from domaintools_misp._version import current
+
+__version__ = current
 
 
 def register(mhandlers, loaded_modules):

@@ -6,9 +6,9 @@ from domaintools_misp.iris_import import dt_misp_module_iris_import
 
 @pytest.fixture
 def dtmm_iris_import_resp(query_parameters, scope="session"):
-    query_parameters[
-        "data"
-    ] = "VTJGc2RHVmtYMTliTmY0NlNaTW5WcHNOVzZ0SGU4ZE9wM1hqQ0hHMFVFRVBXY0dpYjk4R1NNZ2g0VVVWMzJFSGRQc0dDYVVyR3ZiUlBOMmNVMTMxb3N4dFBIcFMyZHZyTUo5MFBvTlpRMzRQL1Q1T05wOWQ4WTYwRHlNb05vM1dQUElFcDVPT056aHRQa1djU1AxeWpxaE15cllwMlJ5WGNwbEpUUWJJSE9FMzBlc2toZDVnYjJUUVdFRGhwWlBrWTNJUVN4NGlObmZHV2xObnI0K09KZ24zM0JJdk02SytQY1RiWTlrRUFlT0FwWHl2Vmo5QnNsc1FZUkhWQnVuM2VReVhheVJpdlhNZDNPYVhHZmptRkNFNHJGUEZZQ3M2dVBLSWw3NEdIcXh6anhTYXNXbVFQcXYvcFl3WnJXVmhYSjBnSlhvVmpsTkVaajRZclcyQ0RyRjRCSFRLOW56U2N3N2tQODE2TFRhZVNFd2JBSjg2UC9KZHo3eHFmRVRFeHpFa2lpcjcrblpJWVFlM0d0OTk2Y3J0VTYvS0x5NmpkSjNiaGdXOVV6SXRMLzNQdzVPaFhValp3U1dUSmEzbm1hVHBTbCtBak00V216TEpuYUMxcGkyZnFDWkpQRmJmeUVFUHM5OG1ud1dTQlBydnowOEtJNjVscjk1TTZTbzVnaCtqZmZnb3ErWk1pcHFoMUFnZjlwUlByTzlVRGZmd082WGYrZG43MmRFPQ=="
+    query_parameters["data"] = (
+        "VTJGc2RHVmtYMTliTmY0NlNaTW5WcHNOVzZ0SGU4ZE9wM1hqQ0hHMFVFRVBXY0dpYjk4R1NNZ2g0VVVWMzJFSGRQc0dDYVVyR3ZiUlBOMmNVMTMxb3N4dFBIcFMyZHZyTUo5MFBvTlpRMzRQL1Q1T05wOWQ4WTYwRHlNb05vM1dQUElFcDVPT056aHRQa1djU1AxeWpxaE15cllwMlJ5WGNwbEpUUWJJSE9FMzBlc2toZDVnYjJUUVdFRGhwWlBrWTNJUVN4NGlObmZHV2xObnI0K09KZ24zM0JJdk02SytQY1RiWTlrRUFlT0FwWHl2Vmo5QnNsc1FZUkhWQnVuM2VReVhheVJpdlhNZDNPYVhHZmptRkNFNHJGUEZZQ3M2dVBLSWw3NEdIcXh6anhTYXNXbVFQcXYvcFl3WnJXVmhYSjBnSlhvVmpsTkVaajRZclcyQ0RyRjRCSFRLOW56U2N3N2tQODE2TFRhZVNFd2JBSjg2UC9KZHo3eHFmRVRFeHpFa2lpcjcrblpJWVFlM0d0OTk2Y3J0VTYvS0x5NmpkSjNiaGdXOVV6SXRMLzNQdzVPaFhValp3U1dUSmEzbm1hVHBTbCtBak00V216TEpuYUMxcGkyZnFDWkpQRmJmeUVFUHM5OG1ud1dTQlBydnowOEtJNjVscjk1TTZTbzVnaCtqZmZnb3ErWk1pcHFoMUFnZjlwUlByTzlVRGZmd082WGYrZG43MmRFPQ=="
+    )
     query_parameters["config"]["results_limit"] = 100
     dtmm_iris_import = dt_misp_module_iris_import(debug=True)
     response = dtmm_iris_import.handler(json.dumps(query_parameters))
@@ -34,10 +34,10 @@ class TestIrisImport:
         dtmm_iris_import = dt_misp_module_iris_import()
         assert dtmm_iris_import.introspection() is not None
 
-    def test_iris_import_has_version(self):
+    def test_iris_import_has_version(self, version):
         dtmm_iris_import = dt_misp_module_iris_import()
         expected_version = {
-            "version": "2.0",
+            "version": version,
             "author": "DomainTools, LLC",
             "description": """
                 Import domains from the Iris Investigate Pivot Engine directly to a MISP event.
