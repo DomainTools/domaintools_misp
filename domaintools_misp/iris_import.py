@@ -2,6 +2,7 @@ from __future__ import absolute_import, unicode_literals, print_function, divisi
 import sys
 import logging
 from domaintools_misp import base
+from domaintools_misp._version import current as version
 
 logger = logging.getLogger(__name__)
 
@@ -9,7 +10,7 @@ logger = logging.getLogger(__name__)
 class dt_misp_module_iris_import(base.dt_misp_module_base):
     def __init__(self, debug=False):
         self.module_info = {
-            "version": "2.0",
+            "version": version,
             "author": "DomainTools, LLC",
             "description": """
                 Import domains from the Iris Investigate Pivot Engine directly to a MISP event.
@@ -28,9 +29,7 @@ class dt_misp_module_iris_import(base.dt_misp_module_base):
             self.log.setLevel(logging.DEBUG)
             self.ch = logging.StreamHandler(sys.stdout)
             self.ch.setLevel(logging.DEBUG)
-            self.formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
+            self.formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
             self.ch.setFormatter(self.formatter)
             self.log.addHandler(self.ch)
             self.debug = True

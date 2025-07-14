@@ -4,7 +4,6 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "domaintools_misp"
-version = "0.2.5"
 authors = [
   { name="DomainTools", email="support@domaintools.com" },
 ]
@@ -15,7 +14,11 @@ requires-python = ">=3.7"
 classifiers = [
     "Programming Language :: Python :: 3",
 ]
+dynamic = ["version"]
 
 [project.urls]
 "Homepage" = "http://www.domaintools.com/"
 "GitHub" = "https://github.com/DomainTools/domaintools_misp"
+
+[tool.setuptools.dynamic]
+version = { "file" = "VERSION" }

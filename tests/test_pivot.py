@@ -33,10 +33,10 @@ class TestPivot:
         dtmm_pivot = dt_misp_module_pivot()
         assert dtmm_pivot.introspection() is not None
 
-    def test_pivot_has_version(self):
+    def test_pivot_has_version(self, version):
         dtmm_pivot = dt_misp_module_pivot()
         expected_version = {
-            "version": "2.0",
+            "version": version,
             "author": "DomainTools, LLC",
             "description": """
                 The module is superseded by the Iris Pivot module, but remains here for backward compatibility.

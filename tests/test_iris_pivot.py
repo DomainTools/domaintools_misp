@@ -30,10 +30,10 @@ class TestIrisPivot:
         dtmm_iris_pivot = dt_misp_module_iris_pivot()
         assert dtmm_iris_pivot.introspection() is not None
 
-    def test_iris_pivot_has_version(self):
+    def test_iris_pivot_has_version(self, version):
         dtmm_iris_pivot = dt_misp_module_iris_pivot()
         expected_version = {
-            "version": "2.0",
+            "version": version,
             "author": "DomainTools, LLC",
             "description": """
                 Enriches domain attributes with nearly every available field from the Iris Investigate API.

@@ -23,10 +23,10 @@ class TestAnalyze:
         dtmm_analyze = dt_misp_module_analyze()
         assert dtmm_analyze.introspection() is not None
 
-    def test_analyze_has_version(self):
+    def test_analyze_has_version(self, version):
         dtmm_analyze = dt_misp_module_analyze()
         expected_version = {
-            "version": "2.0",
+            "version": version,
             "author": "DomainTools, LLC",
             "description": """
                 This module is superseded by the Iris Investigate module but remains here for backward compatibility.

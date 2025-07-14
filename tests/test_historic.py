@@ -33,10 +33,10 @@ class TestHistoric:
         dtmm_historic = dt_misp_module_historic()
         assert dtmm_historic.introspection() is not None
 
-    def test_historic_has_version(self):
+    def test_historic_has_version(self, version):
         dtmm_historic = dt_misp_module_historic()
         expected_version = {
-            "version": "2.0",
+            "version": version,
             "author": "DomainTools, LLC",
             "description": """
                 The Historic capability will act on Domains or URLs to find historical context by expanding domain names to lists of registrars, IPs and emails historically connected with that indicator.

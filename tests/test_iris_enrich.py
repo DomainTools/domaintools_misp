@@ -30,16 +30,16 @@ class TestIrisEnrich:
         dtmm_iris_enrich = dt_misp_module_iris_enrich()
         assert dtmm_iris_enrich.introspection() is not None
 
-    def test_iris_enrich_has_version(self):
+    def test_iris_enrich_has_version(self, version):
         dtmm_iris_enrich = dt_misp_module_iris_enrich()
         expected_version = {
-            "version": "2.0",
+            "version": version,
             "author": "DomainTools, LLC",
             "description": """
                 Optimized for high-volume domain enrichment, providing Risk scoring, Hosting, Whois, MX and related infrastructure information for a domain.
                 Requires Iris Enrich account provisioning.
                 """,
-            "module-type": ["hover"],
+            "module-type": ["expansion", "hover"],
             "config": ["username", "api_key", "results_limit"],
         }
 
