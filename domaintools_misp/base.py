@@ -316,6 +316,8 @@ class dt_module_helpers:
             self.extract_nested_value(value, f"{label} {key}")
 
     def is_valid_datetime(self, datetime_str, whitelist=("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S+00:00")):
+        if not datetime_str:
+            return False
         for fmt in whitelist:
             try:
                 datetime.strptime(datetime_str, fmt)

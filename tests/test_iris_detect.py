@@ -2,6 +2,7 @@ import json
 import pytest
 
 from domaintools_misp.iris_detect import dt_misp_module_iris_detect
+from domaintools_misp.base import dt_module_helpers
 
 
 @pytest.fixture
@@ -23,6 +24,31 @@ def dtmm_iris_detect_resp(query_parameters, scope="session"):
     dtmm_iris_detect = dt_misp_module_iris_detect()
     response = dtmm_iris_detect.handler(json.dumps(query_parameters))
     return response
+
+
+class TestIsValidDatetime:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        dtmm = dt_misp_module_iris_detect()
+        self.helper = dt_module_helpers(dtmm)
+
+    def test_none_returns_false(self):
+        assert self.helper.is_valid_datetime(None) is False
+
+    def test_empty_string_returns_false(self):
+        assert self.helper.is_valid_datetime("") is False
+
+    def test_valid_date_returns_true(self):
+        assert self.helper.is_valid_datetime("2024-01-15") is True
+
+    def test_valid_datetime_returns_true(self):
+        assert self.helper.is_valid_datetime("2024-01-15T12:30:00+00:00") is True
+
+    def test_invalid_format_returns_false(self):
+        assert self.helper.is_valid_datetime("15/01/2024") is False
+
+    def test_invalid_date_string_returns_false(self):
+        assert self.helper.is_valid_datetime("not-a-date") is False
 
 
 class TestIrisDetect:
