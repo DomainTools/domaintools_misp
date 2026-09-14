@@ -1768,7 +1768,7 @@ class dt_api_adapter_misp:
         tag_domains_as_blocked = self.plugin.config.get("tag_domains_as_blocked")
         preview = self.plugin.config.get("test_mode")
         include_domain_data = self.plugin.config.get("include_domain_data")
-        none_or_empty = ("None", "")
+        none_or_empty = (None, "None", "")
         incorrect_date_format_error = "Incorrect data format, should be YYYY-MM-DD or YYYY-MM-DDThh:mm:ss+00:00"
 
         if discovered_date in none_or_empty:
