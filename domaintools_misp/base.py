@@ -316,6 +316,8 @@ class dt_module_helpers:
             self.extract_nested_value(value, f"{label} {key}")
 
     def is_valid_datetime(self, datetime_str, whitelist=("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S+00:00")):
+        if not datetime_str:
+            return False
         for fmt in whitelist:
             try:
                 datetime.strptime(datetime_str, fmt)
@@ -1761,12 +1763,12 @@ class dt_api_adapter_misp:
         discovered_date = self.plugin.config.get("discovered_date")
         changed_since = self.plugin.config.get("changed_since")
         escalated_since = self.plugin.config.get("escalated_since")
-        risk_score_ranges = self.plugin.config.get("risk_score_ranges")
-        escalation_types = self.plugin.config.get("escalation_types")
+        risk_score_ranges = self.plugin.config.get("risk_score_ranges", "0")
+        escalation_types = self.plugin.config.get("escalation_types","0")
         tag_domains_as_blocked = self.plugin.config.get("tag_domains_as_blocked")
         preview = self.plugin.config.get("test_mode")
         include_domain_data = self.plugin.config.get("include_domain_data")
-        none_or_empty = ("None", "")
+        none_or_empty = (None, "None", "")
         incorrect_date_format_error = "Incorrect data format, should be YYYY-MM-DD or YYYY-MM-DDThh:mm:ss+00:00"
 
         if discovered_date in none_or_empty:

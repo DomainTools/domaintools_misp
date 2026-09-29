@@ -5,10 +5,11 @@ IRIS_DETECT_USER_CONFIG = {
             Import newly discovered domains that need analysis (new) or only those domains that have been manually selected to be “watched”.
             See the Iris Detect User Guide (https://www.domaintools.com/wp-content/uploads/DomainTools_Iris_Detect_User_Guide.pdf) for more information. """,
         "options": ["new", "watched"],
+        "value": "0",
     },
     "test_mode": {
         "type": "Boolean",
-        "message": "To help with testing and configuration, you can limit the API response to 10 results and not be limited by hourly restrictions.",
+        "message": "To help with testing and configuration, you can limit the API response to 2 results and not be limited by hourly restrictions.",
     },
     "monitor_id": {
         "type": "String",

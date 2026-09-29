@@ -19,6 +19,14 @@ class dt_misp_module_iris_detect(base.dt_misp_module_base):
         base.dt_misp_module_base.__init__(self)
         self.misp_attributes["input"] = ["data"]
 
+    def check_config(self, request):
+        config = request.get("config", {})
+        for key, meta in IRIS_DETECT_USER_CONFIG.items():
+            if key not in config and "value" in meta:
+                config[key] = meta["value"]
+        request["config"] = config
+        return super().check_config(request)
+
     def handler(self, q=False):
         if not q:
             return q
