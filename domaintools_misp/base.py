@@ -1825,7 +1825,7 @@ class dt_api_adapter_misp:
             return False
 
         domain_id_list = []
-        tag_td = ["DomainTools", "Iris"]
+        tag_td = ["DomainTools", "Iris Detect"]
         results = results.get("watchlist_domains")
 
         for watchlisted_domain in results:
