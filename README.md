@@ -88,3 +88,11 @@ NOTE: These modules require specialized API endpoints that are not available wit
 
 - The Historic capability will act on Domains or URLs to find historical context by expanding domain names to lists of registrars, IPs and emails historically connected with that indicator
 - Leverages the following DomainTools endpoints: Whois History, Hosting History, Domain Profile, Reverse IP, Reverse Whois, Parsed Whois, Whois
+
+## Threat Feeds
+
+[DomainTools Threat Feeds](https://docs.domaintools.com/api/threat-feeds/) provide domain and IP indicators. MISP imports comma-separated values (CSV) and free-text feeds independently of these modules.
+
+Some feeds support CSV via `Accept: text/csv`. Check [Domain Risk response formats](https://docs.domaintools.com/api/threat-feeds/domain-risk/#response-formats) and your feed's documentation.
+
+For feed access, see [authentication](https://docs.domaintools.com/authentication/) and [data retrieval](https://docs.domaintools.com/api/threat-feeds/data-retrieval/). A MISP site administrator configures local or network feeds using the [MISP feed guide](https://www.circl.lu/doc/misp/managing-feeds/).
